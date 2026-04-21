@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <!-- Metadatos básicos del documento -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Título de la página -->
+    <title>SERENA — Tu calma, tu equilibrio</title>
+
+    <!-- Tipografía principal del proyecto -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Hoja de estilos principal -->
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+
+  <body>
+    <!-- Fondo animado y cursor personalizado -->
+    <canvas id="bg"></canvas>
+    <div id="cur"></div>
+    <div id="cur-ring"></div>
+
+    <!-- =========================
+         NAVEGACIÓN PRINCIPAL
+         ========================= -->
+    <nav>
+      <div class="logo">
+        <div class="logo-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="white" aria-hidden="true">
+            <path d="M12 2C8 4 4 8 4 13c0 4.4 3.6 8 8 8s8-3.6 8-8c0-4.5-3.5-8.6-8-11z" />
+            <path
+              d="M12 6v14"
+              stroke="rgba(255,255,255,.4)"
+              stroke-width="1.5"
+              fill="none"
+            />
+          </svg>
+        </div>
+        <span class="logo-name">SERENA</span>
+      </div>
+
+      <ul class="nav-links">
+        <li><a href="#beneficios">Beneficios</a></li>
+        <li><a href="#sobre">La app</a></li>
+        <li><a href="#experiencia">Experiencia</a></li>
+        <li><a href="#equipo">Equipo</a></li>
+        <li><a href="#experiencia" class="nav-cta">Comenzar</a></li>
+      </ul>
+    </nav>
+
+    <!-- =========================
+         HERO / PORTADA
+         ========================= -->
+    <section class="hero" id="hero">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span class="bdot"></span>
+          Diseñado para universitarios
+        </div>
+
+        <h1>
+          Encuentra tu<br />
+          <span>calma interior</span><br />
+          hoy mismo
+        </h1>
+
+        <p>
+          SERENA te acompaña en el camino hacia el equilibrio emocional.<br />
+          Medita, respira y reconecta contigo en medio del mundo universitario.
+        </p>
+
+        <a href="#experiencia" class="btn-primary">
+          <span>Empieza gratis</span>
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            aria-hidden="true"
+          >
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </a>
+      </div>
+
+      <div class="hero-scroll">
+        <span>Descubrir</span>
+        <div class="scroll-arr"></div>
+      </div>
+    </section>
+
+    <!-- Separador visual entre secciones -->
+    <div class="wave-div">
+      <svg
+        class="wave-svg"
+        viewBox="0 0 1440 60"
+        xmlns="http://www.w3.org/2000/svg"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M0,30 C360,60 720,0 1080,30 C1260,45 1350,20 1440,30 L1440,60 L0,60 Z"
+          fill="rgba(13,31,20,.6)"
+        />
+      </svg>
+    </div>
+
+    <!-- =========================
+         SECCIÓN DE BENEFICIOS
+         ========================= -->
+    <section class="benefits" id="beneficios">
+      <div class="container">
+        <div class="benefits-header reveal">
+          <p class="section-label">Lo que sentirás</p>
+          <h2 class="section-title">Cuatro pilares de tu bienestar</h2>
+          <p class="section-sub section-sub--centered">
+            SERENA te guía hacia un estado de bienestar sostenible a través de prácticas
+            simples diseñadas para tu ritmo de vida.
+          </p>
+        </div>
+
+        <div class="benefits-grid">
+          <article class="bcard reveal reveal-delay-1">
+            <span class="bicon">🌿</span>
+            <h3>Calma</h3>
+            <p>
+              Técnicas de respiración y meditación guiada que reducen el cortisol y llevan
+              tu mente a un estado sereno en minutos.
+            </p>
+          </article>
+
+          <article class="bcard reveal reveal-delay-2">
+            <span class="bicon">⚖️</span>
+            <h3>Equilibrio</h3>
+            <p>
+              Establece rutinas de bienestar que balancean tus demandas académicas con tu
+              salud mental.
+            </p>
+          </article>
+
+          <article class="bcard reveal reveal-delay-3">
+            <span class="bicon">✨</span>
+            <h3>Confianza</h3>
+            <p>
+              Desarrolla una relación más compasiva contigo mismo. Cada sesión refuerza tu
+              autoestima y claridad mental.
+            </p>
+          </article>
+
+          <article class="bcard reveal reveal-delay-4">
+            <span class="bicon">🛡️</span>
+            <h3>Seguridad emocional</h3>
+            <p>
+              Aprende a navegar el estrés de exámenes con herramientas probadas de
+              regulación emocional.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Separador visual entre secciones -->
+    <div class="wave-div">
+      <svg
+        class="wave-svg"
+        viewBox="0 0 1440 60"
+        xmlns="http://www.w3.org/2000/svg"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M0,20 C480,60 960,0 1440,30 L1440,0 L0,0 Z"
+          fill="rgba(13,31,20,.6)"
+        />
+      </svg>
+    </div>
+
+    <!-- =========================
+         SECCIÓN SOBRE LA APP
+         ========================= -->
+    <section class="about" id="sobre">
+      <div class="container">
+        <div class="about-inner">
+          <div class="about-visual reveal">
+            <div class="phone">
+              <div class="pbar"></div>
+
+              <div class="pcircle">
+                <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="M12 2C8 4 4 8 4 13c0 4.4 3.6 8 8 8s8-3.6 8-8c0-4.5-3.5-8.6-8-11z"
+                    fill="white"
+                    opacity=".9"
+                  />
+                  <path
+                    d="M12 6v14"
+                    stroke="rgba(255,255,255,.4)"
+                    stroke-width="1.5"
+                    fill="none"
+                  />
+                </svg>
+              </div>
+
+              <div class="pline"></div>
+              <div class="pline plines"></div>
+              <div class="pline"></div>
+              <div class="pline pline-wide"></div>
+              <div class="pbtn"></div>
+            </div>
+          </div>
+
+          <div class="reveal reveal-delay-about-text">
+            <p class="section-label">Sobre SERENA</p>
+            <h2 class="section-title">Tu espacio seguro en el mundo digital</h2>
+            <p class="section-sub">
+              SERENA es tu compañera de bienestar mental pensada desde y para la experiencia
+              universitaria: las presiones, el síndrome del impostor y la ansiedad ante los
+              exámenes.
+            </p>
+
+            <div class="feats">
+              <div class="feat">
+                <div class="fchk">✓</div>
+                <span>Meditaciones de 3 a 15 minutos adaptadas a tus tiempos</span>
+              </div>
+
+              <div class="feat">
+                <div class="fchk">✓</div>
+                <span>Diario emocional inteligente y seguimiento de progreso</span>
+              </div>
+
+              <div class="feat">
+                <div class="fchk">✓</div>
+                <span>Técnicas SOS para momentos de alta ansiedad</span>
+              </div>
+
+              <div class="feat">
+                <div class="fchk">✓</div>
+                <span>Comunidad de universitarios que se apoyan mutuamente</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================
+         EXPERIENCIA INTERACTIVA
+         ========================= -->
+    <section class="games" id="experiencia">
+      <div class="container">
+        <div class="games-header reveal">
+          <p class="section-label">Experiencia interactiva</p>
+          <h2 class="section-title">Prueba SERENA ahora mismo</h2>
+          <p class="section-sub section-sub--centered">
+            Explora estas experiencias diseñadas para llevarte a un estado de calma en menos
+            de 3 minutos.
+          </p>
+        </div>
+
+        <!-- Botones para cambiar entre minijuegos -->
+        <div class="gtabs reveal reveal-delay-about-text">
+          <button class="tbtn active" data-tab="breath" type="button">
+            🌬️ Respiración guiada
+          </button>
+          <button class="tbtn" data-tab="click" type="button">🌸 Toca la calma</button>
+          <button class="tbtn" data-tab="find" type="button">🔍 Encuentra la paz</button>
+        </div>
+
+        <!-- Juego 1: respiración guiada -->
+        <div class="gpanel active" id="game-breath">
+          <div class="barea">
+            <div class="blabel" id="blabel">Toca el círculo para comenzar</div>
+
+            <div
+              class="bcont"
+              id="breathTrigger"
+              tabindex="0"
+              role="button"
+              aria-label="Iniciar ejercicio de respiración"
+            >
+              <div class="bouter" id="bouter"></div>
+              <div class="bring" id="bring"></div>
+              <div class="binner" id="binner">Toca</div>
+            </div>
+
+            <div class="bcnt" id="bcnt">0 / 4</div>
+
+            <div class="bprog">
+              <div class="bfill" id="bfill"></div>
+            </div>
+
+            <button class="gbtn" id="breset" type="button">🔄 Practicar de nuevo</button>
+          </div>
+        </div>
+
+        <!-- Juego 2: identificar elementos calmantes -->
+        <div class="gpanel" id="game-click">
+          <div class="carea">
+            <p class="game-helper-text">
+              Toca todos los elementos con brillo verde suave. Evita los demás.
+            </p>
+
+            <div class="csrow">
+              <div>
+                <div class="csv" id="cscore">0</div>
+                <div class="csl">encontrados</div>
+              </div>
+              <div>
+                <div class="csv" id="ctarget">—</div>
+                <div class="csl">objetivo</div>
+              </div>
+              <div>
+                <div class="csv" id="cerrors">0</div>
+                <div class="csl">errores</div>
+              </div>
+            </div>
+
+            <div class="cgrid" id="cgrid"></div>
+
+            <button class="gbtn" id="clickRestart" type="button">🌱 Nueva ronda</button>
+          </div>
+        </div>
+
+        <!-- Juego 3: encontrar elementos naturales -->
+        <div class="gpanel" id="game-find">
+          <div class="farea">
+            <p class="game-helper-text game-helper-text--find">
+              Encuentra todos los elementos de la naturaleza escondidos en la cuadrícula
+            </p>
+
+            <div class="ftarget">
+              <span class="ftarget-emoji" id="femoji">🌿</span>
+              <span>Busca este elemento</span>
+            </div>
+
+            <div class="fdots" id="fdots"></div>
+            <div class="fgrid" id="fgrid"></div>
+
+            <button class="gbtn" id="findRestart" type="button">🔍 Nueva búsqueda</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================
+         EQUIPO CREADOR
+         ========================= -->
+    <section class="team" id="equipo">
+      <div class="container">
+        <div class="team-header reveal">
+          <p class="section-label">Quiénes somos</p>
+          <h2 class="section-title">Los creadores de SERENA</h2>
+          <p class="section-sub section-sub--centered">
+            Dos ingenieros que decidieron que la tecnología debía estar al servicio del
+            bienestar estudiantil.
+          </p>
+        </div>
+
+        <div class="tgrid">
+          <div class="tcard reveal reveal-delay-1">
+            <div class="tavatar">RS</div>
+            <div class="tname">Rafael Sibaja</div>
+            <div class="trole">Ingeniero de Sistemas</div>
+            <div class="tuni">
+              Universidad Cooperativa de Colombia<br />
+              Facultad de Ingeniería
+            </div>
+            <span class="tbadge">💻 Co-fundador & Dev</span>
+          </div>
+
+          <div class="tcard reveal reveal-delay-2">
+            <div class="tavatar">AS</div>
+            <div class="tname">Ángel Sepúlveda</div>
+            <div class="trole">Ingeniero de Sistemas</div>
+            <div class="tuni">
+              Universidad Cooperativa de Colombia<br />
+              Facultad de Ingeniería
+            </div>
+            <span class="tbadge">🎨 Co-fundador & UX</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================
+         PIE DE PÁGINA
+         ========================= -->
+    <footer>
+      <span class="flogo">SERENA</span>
+      <p>Tu calma, tu equilibrio, tu bienestar</p>
+      <p>Hecho con ❤️ por Rafael Sibaja & Ángel Sepúlveda</p>
+      <p>Ingenieros de Sistemas — Universidad Cooperativa de Colombia</p>
+      <p class="fsmall">© 2025 SERENA App — Todos los derechos reservados</p>
+    </footer>
+
+    <!-- =========================
+         MODAL / MENSAJE FINAL
+         ========================= -->
+    <div class="woverlay" id="wov">
+      <div class="wcard">
+        <span class="wemoji" id="wemoji">🌿</span>
+        <h2 class="wtitle" id="wtitle">¡Excelente!</h2>
+        <p class="wmsg" id="wmsg">Lo estás haciendo muy bien</p>
+        <button class="wclose" id="wclose" type="button">Continuar</button>
+      </div>
+    </div>
+
+    <!-- Script principal del proyecto -->
+    <script src="js/script.js"></script>
+  </body>
+</html>
