@@ -6,47 +6,59 @@
 <title>SERENA — Tu calma, tu equilibrio</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-<!-- ══ FIREBASE ══ -->
+<!-- ══ FIREBASE REALTIME CHAT ══ -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, push, onValue, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  import { getDatabase, ref, push, onChildAdded, serverTimestamp, query, limitToLast }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-  // ╔══════════════════════════════════════════════╗
-  // ║  PEGA AQUÍ TU firebaseConfig DE FIREBASE     ║
-  // ╚══════════════════════════════════════════════╝
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+  // ╔══════════════════════════════════════════════════════════════╗
+  // ║  PEGA AQUÍ TU firebaseConfig PARA ACTIVAR EL CHAT ONLINE   ║
+  // ║  console.firebase.google.com → proyecto → ⚙️ → Tus apps   ║
+  // ╚══════════════════════════════════════════════════════════════╝
+  const firebaseConfig = {
+    apiKey: "TU_API_KEY",
+    authDomain: "TU_PROJECT.firebaseapp.com",
+    databaseURL: "https://TU_PROJECT-default-rtdb.firebaseio.com",
+    projectId: "TU_PROJECT",
+    storageBucket: "TU_PROJECT.appspot.com",
+    messagingSenderId: "TU_SENDER_ID",
+    appId: "TU_APP_ID"
+  };
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyB3z7qf0lM3s8kIzJcq7AqUJLkU7bVVkLo",
-  authDomain: "serena-chat.firebaseapp.com",
-  projectId: "serena-chat",
-  storageBucket: "serena-chat.firebasestorage.app",
-  messagingSenderId: "820106105245",
-  appId: "1:820106105245:web:daa40206dff5a34b249f74",
-  measurementId: "G-KWMBLLT8QV"
-};
+  const isConfigured = firebaseConfig.apiKey !== "TU_API_KEY";
 
-// Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-  const msgsRef = ref(db, 'serena_chat');
+  if (isConfigured) {
+    try {
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+      const msgsRef = ref(db, 'serena_chat');
+      const recentQ = query(msgsRef, limitToLast(100));
 
-  // Exponer al scope global para usar en funciones no-module
-  window._fbPush = (data) => push(msgsRef, { ...data, ts: serverTimestamp() });
-  window._fbListen = (cb) => onValue(msgsRef, snap => {
-    const msgs = [];
-    snap.forEach(child => msgs.push({ id: child.key, ...child.val() }));
-    cb(msgs);
-  });
-  window._fbReady = true;
+      // Enviar un mensaje a Firebase
+      window._fbSend = (data) => push(msgsRef, {
+        ...data,
+        ts: serverTimestamp(),
+        client: Date.now()
+      });
 
-  console.log('Firebase conectado ✓');
+      // Escuchar SOLO mensajes nuevos (onChildAdded) — tiempo real
+      window._fbListen = (cb) => onChildAdded(recentQ, snap => {
+        if (snap.val()) cb({ id: snap.key, ...snap.val() });
+      });
+
+      window._fbReady = true;
+      // Notificar a la UI que Firebase está listo
+      window.dispatchEvent(new CustomEvent('fbReady'));
+      console.log('✅ Firebase activo — chat online en tiempo real');
+    } catch(e) {
+      console.warn('Firebase error:', e.message);
+      window._fbReady = false;
+    }
+  } else {
+    console.info('ℹ️ Modo demo — pega tu firebaseConfig para chat online real');
+    window._fbReady = false;
+  }
 </script>
 
 <style>
@@ -77,6 +89,7 @@ body{font-family:'Poppins',sans-serif;overflow-x:hidden;cursor:none;background:v
   animation:motiPop .35s cubic-bezier(.34,1.56,.64,1) forwards, motiFade 6s .3s ease forwards}
 @keyframes motiPop{from{opacity:0;transform:scale(.75) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
 @keyframes motiFade{0%{opacity:1;transform:translateY(0)}70%{opacity:1;transform:translateY(-8px)}100%{opacity:0;transform:translateY(-22px)}}
+@keyframes motiRemove{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.85) translateY(-12px)}}
 
 /* ════════════════════════ NAV ════════════════════════ */
 nav{position:fixed;top:0;left:0;right:0;z-index:600;display:flex;align-items:center;justify-content:space-between;padding:1rem 2.5rem;background:rgba(var(--rgb-dark),.8);backdrop-filter:blur(20px);border-bottom:1px solid rgba(var(--rgb1),.2);transition:var(--transition-theme)}
@@ -813,33 +826,71 @@ function spawnTrail(x,y){const now=Date.now();if(now-trailT<28)return;trailT=now
 /* ══════════════════════════════════════════════════════
    CLICK EFFECTS (no cooldown — instant per click)
 ══════════════════════════════════════════════════════ */
-const msgs=['"La calma no es la ausencia de caos,\nes encontrar paz dentro de él."','"Cada respiro es una nueva oportunidad."','"Eres más fuerte de lo que crees."','"El autocuidado no es egoísmo."','"Tu mente merece descanso."','"Pequeñas pausas, grandes transformaciones."','"Hoy bastó con intentarlo."','"La ansiedad miente. Tú estás bien."','"Fluye como el agua."','"Estás en el camino correcto."','"La perfección es un mito. El progreso es real."','"Respira. Este momento también pasará."','"Mereces paz con la misma intensidad\nque mereces el éxito."','"Tu presencia impacta más\nde lo que crees."'];
+const msgs=[
+  '"La calma no es la ausencia de caos,\nes encontrar paz dentro de él."',
+  '"Cada respiro es una nueva oportunidad."',
+  '"Eres más fuerte de lo que crees."',
+  '"El autocuidado no es egoísmo."',
+  '"Tu mente merece descanso."',
+  '"Pequeñas pausas, grandes transformaciones."',
+  '"Hoy bastó con intentarlo."',
+  '"La ansiedad miente. Tú estás bien."',
+  '"Fluye como el agua."',
+  '"Estás en el camino correcto."',
+  '"La perfección es un mito.\nEl progreso es real."',
+  '"Respira. Este momento también pasará."',
+  '"Mereces paz con la misma intensidad\nque mereces el éxito."',
+  '"Tu presencia impacta más\nde lo que crees."',
+  '"Cada día es una nueva página\nen tu historia."',
+  '"Confía en el proceso,\nte estás convirtiendo en quien serás."'
+];
 let msgIdx=0;
+const MAX_MSGS=3;
+const activeMsgs=[];
 
-const BLOCKED_SELECTORS=['button','a','input','[role="tab"]','.citem','.fitem','.memcard','.bubble','.star-obj','.cs-opt','.chat-send','.admin-send'];
-
-function isClickable(el){return BLOCKED_SELECTORS.some(s=>el.closest(s))}
+const BLOCKED=['button','a','input','textarea','.citem','.fitem','.memcard','.bubble','.star-obj','.cs-opt'];
+function isClickable(el){return BLOCKED.some(s=>el.closest&&el.closest(s));}
 
 function spawnMsg(x,y){
-  const el=document.createElement('div');el.className='moti';
-  el.textContent=msgs[msgIdx%msgs.length];msgIdx++;
-  const pw=Math.min(270,window.innerWidth-40);
+  // Remove oldest if already at max
+  if(activeMsgs.length>=MAX_MSGS){
+    const oldest=activeMsgs.shift();
+    if(oldest&&oldest.parentNode){
+      oldest.style.animation='motiRemove .35s ease forwards';
+      setTimeout(()=>oldest.remove(),350);
+    }
+  }
+  const el=document.createElement('div');
+  el.className='moti';
+  el.textContent=msgs[msgIdx%msgs.length];
+  msgIdx++;
+  const pw=Math.min(260,window.innerWidth-40);
   const px=Math.min(Math.max(x-pw/2,14),window.innerWidth-pw-14);
   const py=Math.max(y-80,76);
-  el.style.left=px+'px';el.style.top=py+'px';el.style.width=pw+'px';
+  el.style.left=px+'px';
+  el.style.top=py+'px';
+  el.style.width=pw+'px';
   document.body.appendChild(el);
-  setTimeout(()=>el.remove(),6500);
+  activeMsgs.push(el);
+  // Auto-remove after 6s and clean from array
+  setTimeout(()=>{
+    const idx=activeMsgs.indexOf(el);
+    if(idx>-1)activeMsgs.splice(idx,1);
+    if(el.parentNode){
+      el.style.animation='motiRemove .4s ease forwards';
+      setTimeout(()=>el.remove(),400);
+    }
+  },6000);
 }
 
 document.addEventListener('click',e=>{
   if(isClickable(e.target))return;
+  // Ripple + particles
   for(let i=0;i<3;i++)ripples.push({rx:e.clientX,ry:e.clientY,r:0,maxR:100+i*60,speed:1.6+i*1.3,alpha:.5-i*.12,ci:i%2});
   for(let k=0;k<12;k++){const a=(Math.PI*2/12)*k;spawnP(e.clientX,e.clientY,Math.cos(a)*(1+Math.random()*2.2),Math.sin(a)*(1+Math.random()*2.2));}
   spawnMsg(e.clientX,e.clientY);
 });
-
-window.addEventListener('scroll',()=>{if(Math.random()>.65)spawnMsg(100+Math.random()*(window.innerWidth-250),80+Math.random()*(window.innerHeight-200));},{passive:true});
-setInterval(()=>spawnMsg(80+Math.random()*(window.innerWidth-200),80+Math.random()*(window.innerHeight-220)),16000);
+// NO scroll listener — removed intentionally
 
 /* ══════════════════════════════════════════════════════
    REVEAL
@@ -994,7 +1045,7 @@ document.addEventListener('keydown',e=>{
   if(adminSeq.length>8)adminSeq=adminSeq.slice(-8);
   if(adminSeq.endsWith('admin123'))openAdmin();
 });
-function openAdmin(){document.getElementById('adminOv').classList.add('show');adminSyncMsgs();}
+function openAdmin(){document.getElementById('adminOv').classList.add('show');startListening();}
 function closeAdmin(){document.getElementById('adminOv').classList.remove('show');}
 function adminTab(t){
   document.querySelectorAll('.admin-nav-btn').forEach(b=>b.classList.remove('active'));
@@ -1004,74 +1055,125 @@ function adminTab(t){
 }
 
 /* ══════════════════════════════════════════════════════
-   CHAT — Firebase or local fallback
+   CHAT — Firebase realtime multi-user + local fallback
 ══════════════════════════════════════════════════════ */
-let nickname='Usuario';
-let localMsgs=[];
-let totalMsgs=0,adminReplies=0;
+let nickname = 'Visitante';
+let fbListening = false;
+let localMsgs = []; // only used in demo mode
+let totalMsgs = 0, adminReplies = 0, uniqueUsers = new Set();
 
-function setNick(){const v=document.getElementById('nickInp').value.trim();if(v){nickname=v;document.getElementById('nickInp').value='';addSysMsg('Nombre cambiado a: '+nickname);}}
-
-function fmtTime(){const d=new Date();return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');}
-
-function buildMsgEl(m,container){
-  const div=document.createElement('div');div.className='msg '+m.role;
-  div.textContent=m.text;
-  const t=document.createElement('div');t.className='msg-time';t.textContent=(m.name?m.name+' · ':'')+fmtTime();
-  div.appendChild(t);container.appendChild(div);container.scrollTop=container.scrollHeight;
+function setNick(){
+  const v = document.getElementById('nickInp').value.trim();
+  if(v){ nickname = v; document.getElementById('nickInp').value = ''; addChatSys('Tu nombre es ahora: '+nickname+' 🌿'); }
 }
 
-function addSysMsg(text){
-  const m={role:'system',text};
-  localMsgs.push(m);renderChats();
+function fmtTime(){
+  const d = new Date();
+  return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
 }
 
-function renderChats(){
-  const uc=document.getElementById('chatMsgs');const ac=document.getElementById('adminMsgs');
-  uc.innerHTML='';ac.innerHTML='';
-  localMsgs.forEach(m=>{buildMsgEl(m,uc);buildMsgEl(m,ac);});
-  totalMsgs=localMsgs.filter(m=>m.role!=='system').length;
-  adminReplies=localMsgs.filter(m=>m.role==='admin').length;
-  document.getElementById('statMsgs').textContent=totalMsgs;
-  document.getElementById('statAdmin').textContent=adminReplies;
-  const users=new Set(localMsgs.filter(m=>m.role==='user').map(m=>m.name)).size;
-  document.getElementById('statUsers').textContent=users||1;
+/* Append a single message bubble to a container (no re-render) */
+function appendMsgEl(m, container, animate=true){
+  const wrap = document.createElement('div');
+  const role = m.role==='admin'?'admin':m.role==='system'?'system':'user';
+  wrap.className = 'msg '+role;
+  if(animate) wrap.style.animation='msgPop .35s cubic-bezier(.34,1.56,.64,1)';
+  wrap.textContent = m.text;
+  if(role !== 'system'){
+    const t = document.createElement('div');
+    t.className = 'msg-time';
+    const ts = m.client ? fmtTime() : fmtTime();
+    t.textContent = (m.name?m.name+' · ':'')+ts;
+    wrap.appendChild(t);
+  }
+  container.appendChild(wrap);
+  container.scrollTop = container.scrollHeight;
+  return wrap;
+}
+
+function addChatSys(text){
+  const m = {role:'system', text};
+  const uc = document.getElementById('chatMsgs');
+  const ac = document.getElementById('adminMsgs');
+  appendMsgEl(m, uc);
+  appendMsgEl(m, ac);
+}
+
+/* Called when a new message arrives (Firebase OR local) */
+function onNewMsg(m){
+  const uc = document.getElementById('chatMsgs');
+  const ac = document.getElementById('adminMsgs');
+  appendMsgEl(m, uc);
+  appendMsgEl(m, ac);
+  // Update stats
+  if(m.role !== 'system'){
+    totalMsgs++;
+    if(m.role === 'admin') adminReplies++;
+    if(m.role === 'user' && m.name) uniqueUsers.add(m.name);
+  }
+  document.getElementById('statMsgs').textContent = totalMsgs;
+  document.getElementById('statAdmin').textContent = adminReplies;
+  document.getElementById('statUsers').textContent = uniqueUsers.size || 1;
+  // Hide typing indicator when admin replies
+  if(m.role === 'admin') document.getElementById('chatTyping').textContent='';
+}
+
+/* Start listening — only call once */
+function startListening(){
+  if(fbListening) return;
+  fbListening = true;
+  if(window._fbReady && window._fbListen){
+    window._fbListen(msg => onNewMsg(msg));
+  }
 }
 
 function sendChat(){
-  const inp=document.getElementById('chatInp');const text=inp.value.trim();if(!text)return;
-  inp.value='';
-  const m={role:'user',text,name:nickname};
-  // Try Firebase first, fallback to local
-  if(window._fbReady && window._fbPush){
-    window._fbPush(m).catch(()=>{localMsgs.push(m);renderChats();});
-  }else{localMsgs.push(m);renderChats();}
-  // Show typing indicator
-  const typing=document.getElementById('chatTyping');typing.textContent='SERENA está escribiendo…';
-  setTimeout(()=>typing.textContent='',2500);
+  const inp = document.getElementById('chatInp');
+  const text = inp.value.trim();
+  if(!text) return;
+  inp.value = '';
+  const m = { role:'user', text, name: nickname, client: Date.now() };
+  if(window._fbReady && window._fbSend){
+    window._fbSend(m).catch(()=>{ onNewMsg(m); });
+  } else {
+    // Demo mode — only shows locally
+    onNewMsg(m);
+    // Simulate auto-reply after delay
+    setTimeout(()=>{
+      onNewMsg({role:'admin', text:'¡Hola '+nickname+'! 🌿 Gracias por escribirnos. Estamos aquí para acompañarte.', name:'SERENA'});
+    }, 1800);
+  }
+  // Typing indicator
+  if(window._fbReady){
+    const typing = document.getElementById('chatTyping');
+    typing.textContent = 'SERENA está escribiendo…';
+    setTimeout(()=>{ if(typing.textContent.includes('escribiendo')) typing.textContent=''; }, 3000);
+  }
 }
 
 function adminSend(){
-  const inp=document.getElementById('adminInp');const text=inp.value.trim();if(!text)return;
-  inp.value='';
-  const m={role:'admin',text,name:'SERENA'};
-  if(window._fbReady && window._fbPush){
-    window._fbPush(m).catch(()=>{localMsgs.push(m);renderChats();});
-  }else{localMsgs.push(m);renderChats();}
+  const inp = document.getElementById('adminInp');
+  const text = inp.value.trim();
+  if(!text) return;
+  inp.value = '';
+  const m = { role:'admin', text, name:'SERENA', client: Date.now() };
+  if(window._fbReady && window._fbSend){
+    window._fbSend(m).catch(()=>{ onNewMsg(m); });
+  } else {
+    onNewMsg(m);
+  }
 }
 
-function adminSyncMsgs(){
-  // If Firebase is ready, use it; otherwise show local
-  if(window._fbReady && window._fbListen){
-    window._fbListen(msgs=>{
-      localMsgs=msgs.map(m=>({role:m.role||'user',text:m.text||'',name:m.name||'Usuario'}));
-      renderChats();
-    });
-  }else{renderChats();}
-}
-
-// Try to connect Firebase listener on load
-setTimeout(()=>{if(window._fbReady && window._fbListen){window._fbListen(msgs=>{localMsgs=msgs.map(m=>({role:m.role||'user',text:m.text||'',name:m.name||'Usuario'}));renderChats();});}},2000);
+// Start Firebase listener when ready, or immediately in demo mode
+window.addEventListener('fbReady', ()=>{ startListening(); });
+// In demo mode or if FB loads after page
+setTimeout(()=>{
+  if(window._fbReady) startListening();
+  else {
+    // Demo mode notice
+    addChatSys('Modo demo activo. Configura Firebase para chat online real. 🔧');
+  }
+}, 1500);
 
 /* INIT GAMES */
 initClick();initFind();initColorGame();
