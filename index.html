@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SERENA — Tu calma, tu equilibrio</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
+ 
 <!-- ══ FIREBASE REALTIME CHAT ══ -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getDatabase, ref, push, onChildAdded, serverTimestamp, query, limitToLast }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
+ 
   // ╔══════════════════════════════════════════════════════════════╗
   // ║  PEGA AQUÍ TU firebaseConfig PARA ACTIVAR EL CHAT ONLINE   ║
   // ║  console.firebase.google.com → proyecto → ⚙️ → Tus apps   ║
@@ -25,28 +25,28 @@
     messagingSenderId: "TU_SENDER_ID",
     appId: "TU_APP_ID"
   };
-
+ 
   const isConfigured = firebaseConfig.apiKey !== "TU_API_KEY";
-
+ 
   if (isConfigured) {
     try {
       const app = initializeApp(firebaseConfig);
       const db = getDatabase(app);
       const msgsRef = ref(db, 'serena_chat');
       const recentQ = query(msgsRef, limitToLast(100));
-
+ 
       // Enviar un mensaje a Firebase
       window._fbSend = (data) => push(msgsRef, {
         ...data,
         ts: serverTimestamp(),
         client: Date.now()
       });
-
+ 
       // Escuchar SOLO mensajes nuevos (onChildAdded) — tiempo real
       window._fbListen = (cb) => onChildAdded(recentQ, snap => {
         if (snap.val()) cb({ id: snap.key, ...snap.val() });
       });
-
+ 
       window._fbReady = true;
       // Notificar a la UI que Firebase está listo
       window.dispatchEvent(new CustomEvent('fbReady'));
@@ -60,7 +60,7 @@
     window._fbReady = false;
   }
 </script>
-
+ 
 <style>
 /* ════════════════════════ RESET & VARS ════════════════════════ */
 *{margin:0;padding:0;box-sizing:border-box}
@@ -74,23 +74,23 @@
 }
 html{scroll-behavior:smooth}
 body{font-family:'Poppins',sans-serif;overflow-x:hidden;cursor:none;background:var(--bg-dark);color:var(--text-bright);transition:background .6s}
-
+ 
 /* ════════════════════════ CANVAS ════════════════════════ */
 #bg{position:fixed;inset:0;z-index:0;transition:filter .8s}
-
+ 
 /* ════════════════════════ CURSOR ════════════════════════ */
 #cur{position:fixed;width:13px;height:13px;border-radius:50%;background:rgba(var(--rgb1),.9);pointer-events:none;z-index:99999;transform:translate(-50%,-50%);mix-blend-mode:screen;transition:transform .1s}
 #cur-ring{position:fixed;width:34px;height:34px;border-radius:50%;border:1.5px solid rgba(var(--rgb1),.55);pointer-events:none;z-index:99998;transform:translate(-50%,-50%)}
 .trail{position:fixed;border-radius:50%;pointer-events:none;z-index:99990;transform:translate(-50%,-50%);animation:tf 1.2s ease forwards}
 @keyframes tf{0%{opacity:.75;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(0)}}
-
+ 
 /* ════════════════════════ MOTIVATIONAL ════════════════════════ */
 .moti{position:fixed;z-index:8500;pointer-events:none;padding:1rem 1.6rem;border-radius:var(--rlg);background:rgba(var(--rgb-dark),.65);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid rgba(var(--rgb1),.38);color:var(--c1);max-width:285px;font-size:.85rem;font-weight:400;line-height:1.65;text-align:center;white-space:pre-line;
   animation:motiPop .35s cubic-bezier(.34,1.56,.64,1) forwards, motiFade 6s .3s ease forwards}
 @keyframes motiPop{from{opacity:0;transform:scale(.75) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
 @keyframes motiFade{0%{opacity:1;transform:translateY(0)}70%{opacity:1;transform:translateY(-8px)}100%{opacity:0;transform:translateY(-22px)}}
 @keyframes motiRemove{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.85) translateY(-12px)}}
-
+ 
 /* ════════════════════════ NAV ════════════════════════ */
 nav{position:fixed;top:0;left:0;right:0;z-index:600;display:flex;align-items:center;justify-content:space-between;padding:1rem 2.5rem;background:rgba(var(--rgb-dark),.8);backdrop-filter:blur(20px);border-bottom:1px solid rgba(var(--rgb1),.2);transition:var(--transition-theme)}
 .logo{display:flex;align-items:center;gap:10px}
@@ -103,7 +103,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:600;display:flex;align-items:cen
 .nav-cta{background:var(--c4)!important;color:var(--text-bright)!important;padding:.5rem 1.2rem;border-radius:var(--rxl)!important;box-shadow:0 0 16px rgba(var(--rgb4),.5)}
 .nav-theme-btn{background:rgba(var(--rgb1),.15);color:var(--c1);border:1px solid rgba(var(--rgb1),.3);padding:.45rem 1rem;border-radius:var(--rxl);font-family:'Poppins',sans-serif;font-size:.82rem;font-weight:500;cursor:none;transition:all .3s}
 .nav-theme-btn:hover{background:rgba(var(--rgb1),.25)}
-
+ 
 /* ════════════════════════ SECTIONS ════════════════════════ */
 section{position:relative;z-index:2;padding:5rem 2rem}
 .container{max-width:1080px;margin:0 auto}
@@ -112,7 +112,7 @@ section{position:relative;z-index:2;padding:5rem 2rem}
 .section-sub{font-size:1rem;color:var(--text-dim);line-height:1.8;max-width:560px}
 .reveal{opacity:0;transform:translateY(36px);transition:opacity 1s cubic-bezier(.22,1,.36,1),transform 1s cubic-bezier(.22,1,.36,1)}
 .reveal.on{opacity:1;transform:none}
-
+ 
 /* ════════════════════════ HERO ════════════════════════ */
 .hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:7rem 2rem 4rem}
 .hero-content{position:relative;z-index:3;max-width:700px}
@@ -128,7 +128,7 @@ section{position:relative;z-index:2;padding:5rem 2rem}
 .hero-scroll{position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;color:rgba(var(--rgb1),.6);font-size:.75rem;letter-spacing:.5px;animation:scrollBob 2.5s ease-in-out infinite}
 @keyframes scrollBob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-8px)}}
 .scroll-arr{width:20px;height:20px;border-right:2px solid var(--c1);border-bottom:2px solid var(--c1);transform:rotate(45deg);margin-top:2px;opacity:.7;transition:var(--transition-theme)}
-
+ 
 /* ════════════════════════ BENEFITS ════════════════════════ */
 .benefits{background:rgba(var(--rgb-dark),.6);backdrop-filter:blur(12px)}
 .benefits-header{text-align:center;margin-bottom:3.5rem}
@@ -140,7 +140,7 @@ section{position:relative;z-index:2;padding:5rem 2rem}
 .bcard h3{font-size:1.1rem;font-weight:600;color:var(--c1);margin-bottom:.6rem;transition:var(--transition-theme)}
 .bcard p{font-size:.9rem;color:var(--text-dim);line-height:1.7}
 .bicon{font-size:2rem;margin-bottom:1rem;display:block;filter:drop-shadow(0 0 8px rgba(var(--rgb1),.5))}
-
+ 
 /* ════════════════════════ ABOUT ════════════════════════ */
 .about{background:rgba(var(--rgb-dark),.65);backdrop-filter:blur(10px)}
 .about-inner{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center}
@@ -155,11 +155,11 @@ section{position:relative;z-index:2;padding:5rem 2rem}
 .feats{margin-top:1.8rem;display:flex;flex-direction:column;gap:.9rem}
 .feat{display:flex;align-items:center;gap:10px;font-size:.9rem;color:var(--text-mid)}
 .fchk{width:20px;height:20px;border-radius:50%;background:rgba(var(--rgb1),.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--c1);font-size:.75rem;font-weight:700;border:1px solid rgba(var(--rgb1),.3);transition:var(--transition-theme)}
-
+ 
 /* ════════════════════════ WAVE ════════════════════════ */
 .wave-div{width:100%;overflow:hidden;line-height:0;position:relative;z-index:2}
 .wave-div svg{display:block;width:100%}
-
+ 
 /* ════════════════════════ GAMES ════════════════════════ */
 .games{background:rgba(var(--rgb-dark),.6);backdrop-filter:blur(12px)}
 .games-header{text-align:center;margin-bottom:3rem}
@@ -169,12 +169,12 @@ section{position:relative;z-index:2;padding:5rem 2rem}
 .gpanel{display:none;animation:fadeIn .5s ease}
 .gpanel.active{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-
+ 
 /* ── SHARED GAME STYLES ── */
 .garea{text-align:center;padding:2rem 1rem}
 .gbtn{background:var(--c4);color:#d4f0e2;font-family:'Poppins',sans-serif;font-size:.9rem;font-weight:600;padding:.72rem 1.8rem;border-radius:var(--rxl);border:none;cursor:none;margin-top:1.4rem;transition:transform .3s,box-shadow .3s,background .6s;display:inline-flex;align-items:center;gap:7px;box-shadow:0 4px 20px rgba(var(--rgb4),.4)}
 .gbtn:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(var(--rgb4),.6)}
-
+ 
 /* ── BREATHING ── */
 .blabel{font-size:1rem;color:var(--text-dim);margin-bottom:1.5rem;font-weight:300;min-height:1.5rem;transition:all .6s}
 .bcont{position:relative;width:200px;height:200px;margin:0 auto 2rem;cursor:none}
@@ -184,7 +184,7 @@ section{position:relative;z-index:2;padding:5rem 2rem}
 .bcnt{font-size:1.8rem;font-weight:700;color:var(--c1);margin-bottom:.5rem;text-shadow:0 0 20px rgba(var(--rgb1),.5);transition:var(--transition-theme)}
 .bprog{width:200px;margin:0 auto;height:5px;background:rgba(var(--rgb1),.15);border-radius:3px}
 .bfill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--c1),var(--c2));transition:width .8s ease,background .6s;box-shadow:0 0 10px rgba(var(--rgb1),.5)}
-
+ 
 /* ── CLICK GAME ── */
 .csrow{display:flex;justify-content:center;gap:2rem;margin-bottom:1.5rem}
 .csv{font-size:1.7rem;font-weight:700;color:var(--c1);text-shadow:0 0 15px rgba(var(--rgb1),.5);transition:var(--transition-theme)}
@@ -195,7 +195,7 @@ section{position:relative;z-index:2;padding:5rem 2rem}
 @keyframes cg{0%,100%{box-shadow:0 0 20px rgba(var(--rgb1),.5)}50%{box-shadow:0 0 40px rgba(var(--rgb1),.85),0 0 60px rgba(var(--rgb1),.3)}}
 .citem.found{background:rgba(var(--rgb2),.2);opacity:.4;pointer-events:none;transform:scale(.85)}
 .citem.wflash{animation:shake .35s ease}
-
+ 
 /* ── FIND GAME ── */
 .ftarget{display:inline-flex;align-items:center;gap:8px;background:rgba(var(--rgb1),.1);border:1px solid rgba(var(--rgb1),.25);color:var(--c1);font-size:.88rem;font-weight:600;padding:.45rem 1.1rem;border-radius:var(--rxl);margin-bottom:1.5rem;transition:var(--transition-theme)}
 .fgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;max-width:420px;margin:0 auto 1rem}
@@ -206,7 +206,7 @@ section{position:relative;z-index:2;padding:5rem 2rem}
 .fdots{display:flex;justify-content:center;gap:.45rem;flex-wrap:wrap;margin-bottom:.8rem}
 .fdot{width:9px;height:9px;border-radius:50%;background:rgba(var(--rgb1),.2);transition:all .4s;border:1px solid rgba(var(--rgb1),.2)}
 .fdot.done{background:var(--c1);box-shadow:0 0 8px rgba(var(--rgb1),.6)}
-
+ 
 /* ── BUBBLE POP GAME ── */
 .bpgame{position:relative;width:100%;max-width:480px;height:320px;margin:0 auto;border-radius:var(--rmd);background:rgba(var(--rgb1),.05);border:1px solid rgba(var(--rgb1),.15);overflow:hidden}
 .bubble{position:absolute;border-radius:50%;cursor:none;display:flex;align-items:center;justify-content:center;font-size:1.2rem;transition:transform .2s;animation:bubbleRise linear forwards}
@@ -214,7 +214,7 @@ section{position:relative;z-index:2;padding:5rem 2rem}
 .bubble:hover{transform:scale(1.15)}
 .bubble.popped{animation:bubblePop .35s ease forwards!important}
 @keyframes bubblePop{0%{transform:scale(1)}50%{transform:scale(1.5);opacity:.7}100%{transform:scale(0);opacity:0}}
-
+ 
 /* ── MEMORY GAME ── */
 .memgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:360px;margin:0 auto 1rem}
 .memcard{aspect-ratio:1;border-radius:var(--rsm);cursor:none;perspective:600px;transition:transform .3s}
@@ -225,12 +225,12 @@ section{position:relative;z-index:2;padding:5rem 2rem}
 .memcard-back{background:rgba(var(--rgb-dark),.8);border:1px solid rgba(var(--rgb1),.15);transform:rotateY(180deg)}
 .memcard.matched .memcard-inner{animation:matchGlow .5s ease}
 @keyframes matchGlow{0%,100%{box-shadow:none}50%{box-shadow:0 0 25px rgba(var(--rgb1),.8)}}
-
+ 
 /* ── ZEN GARDEN ── */
 .zengame{position:relative;width:100%;max-width:480px;height:280px;margin:0 auto;border-radius:var(--rmd);overflow:hidden;cursor:none}
 .zen-canvas{width:100%;height:100%;display:block}
 .zen-instructions{font-size:.85rem;color:var(--text-dim);margin-bottom:1rem}
-
+ 
 /* ── STAR CATCH ── */
 .stargame{position:relative;width:100%;max-width:480px;height:300px;margin:0 auto;border-radius:var(--rmd);background:rgba(var(--rgb-dark),.8);border:1px solid rgba(var(--rgb1),.15);overflow:hidden}
 .star-obj{position:absolute;cursor:none;font-size:1.6rem;animation:starFloat linear forwards;transition:transform .2s}
@@ -243,7 +243,7 @@ section{position:relative;z-index:2;padding:5rem 2rem}
 .star-lbl{font-size:.7rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px}
 .star-bar-wrap{width:200px;margin:0 auto .8rem;height:5px;background:rgba(var(--rgb1),.15);border-radius:3px}
 .star-bar{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--c1),var(--c2));transition:width .3s ease,background .6s}
-
+ 
 /* ── COLOR SWIPE GAME ── */
 .colorswipe{max-width:460px;margin:0 auto}
 .cs-prompt{font-size:1.1rem;font-weight:600;color:var(--text-bright);margin-bottom:1.2rem;min-height:1.6rem}
@@ -255,10 +255,10 @@ section{position:relative;z-index:2;padding:5rem 2rem}
 @keyframes correctBounce{0%{transform:scale(1)}40%{transform:scale(1.35)}70%{transform:scale(.9)}100%{transform:scale(1)}}
 .cs-opt.wrong-pick{animation:shake .35s ease}
 .cs-progress{font-size:.85rem;color:var(--text-dim);margin-bottom:.5rem}
-
+ 
 /* ═══ SHARED GAME ANIM ═══ */
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
-
+ 
 /* ════════════════════════ CHAT SECTION ════════════════════════ */
 .chat-section{background:rgba(var(--rgb-dark),.65);backdrop-filter:blur(12px)}
 .chat-section .section-sub{margin:0 auto}
@@ -291,7 +291,7 @@ section{position:relative;z-index:2;padding:5rem 2rem}
 .chat-nick-btn{background:rgba(var(--rgb1),.2);color:var(--c1);border:1px solid rgba(var(--rgb1),.3);border-radius:var(--rxl);padding:.45rem 1rem;font-family:'Poppins',sans-serif;font-size:.8rem;cursor:none;transition:all .3s;white-space:nowrap}
 .chat-nick-btn:hover{background:rgba(var(--rgb1),.35)}
 .chat-typing{padding:.4rem 1.2rem;font-size:.75rem;color:var(--text-dim);min-height:1.4rem;font-style:italic}
-
+ 
 /* ════════════════════════ TEAM ════════════════════════ */
 .team{background:rgba(var(--rgb-dark),.7);backdrop-filter:blur(12px)}
 .team-header{text-align:center;margin-bottom:3.5rem}
@@ -304,14 +304,14 @@ section{position:relative;z-index:2;padding:5rem 2rem}
 .trole{font-size:.82rem;font-weight:600;color:var(--c1);margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.8px;transition:var(--transition-theme)}
 .tuni{font-size:.82rem;color:var(--text-dim);margin-bottom:1rem;line-height:1.6}
 .tbadge{display:inline-flex;align-items:center;gap:5px;background:rgba(var(--rgb1),.12);color:var(--c1);font-size:.78rem;font-weight:600;padding:.35rem .9rem;border-radius:var(--rxl);border:1px solid rgba(var(--rgb1),.2);transition:var(--transition-theme)}
-
+ 
 /* ════════════════════════ FOOTER ════════════════════════ */
 footer{background:rgba(var(--rgb-dark),.95);color:var(--text-dim);text-align:center;padding:3.5rem 2rem;position:relative;z-index:2;border-top:1px solid rgba(var(--rgb1),.12);transition:var(--transition-theme)}
 footer::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(var(--rgb1),.08),transparent 60%);pointer-events:none}
 .flogo{font-size:1.8rem;font-weight:700;color:var(--text-bright);display:block;margin-bottom:.5rem;letter-spacing:.5px;text-shadow:0 0 20px rgba(var(--rgb1),.4);transition:var(--transition-theme)}
 footer p{font-size:.87rem;margin-top:.4rem;line-height:1.7}
 footer .fsmall{font-size:.75rem;opacity:.4;margin-top:1.2rem}
-
+ 
 /* ════════════════════════ WIN ════════════════════════ */
 .woverlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(var(--rgb-dark),.88);backdrop-filter:blur(16px);align-items:center;justify-content:center}
 .woverlay.show{display:flex;animation:fadeIn .6s ease}
@@ -323,7 +323,7 @@ footer .fsmall{font-size:.75rem;opacity:.4;margin-top:1.2rem}
 .wmsg{font-size:.98rem;color:var(--text-mid);line-height:1.7;margin-bottom:1.5rem}
 .wclose{background:var(--c2);color:#d4f0e2;font-family:'Poppins',sans-serif;font-size:.92rem;font-weight:600;padding:.7rem 2rem;border-radius:var(--rxl);border:none;cursor:none;transition:all .3s,background .6s;box-shadow:0 4px 16px rgba(var(--rgb2),.5)}
 .wclose:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(var(--rgb2),.7)}
-
+ 
 /* ════════════════════════ THEME PICKER ════════════════════════ */
 .theme-overlay{display:none;position:fixed;inset:0;z-index:9800;background:rgba(var(--rgb-dark),.88);backdrop-filter:blur(16px);align-items:center;justify-content:center}
 .theme-overlay.show{display:flex;animation:fadeIn .5s ease}
@@ -344,7 +344,7 @@ footer .fsmall{font-size:.75rem;opacity:.4;margin-top:1.2rem}
 .cp-row input[type=color]{width:100%;height:38px;border:1px solid rgba(var(--rgb1),.2);border-radius:var(--rsm);background:rgba(var(--rgb1),.05);cursor:none;padding:2px}
 .theme-close{display:block;width:100%;background:var(--c2);color:white;font-family:'Poppins',sans-serif;font-size:.92rem;font-weight:600;padding:.72rem;border-radius:var(--rxl);border:none;cursor:none;margin-top:.5rem;transition:all .3s}
 .theme-close:hover{opacity:.85}
-
+ 
 /* ════════════════════════ ADMIN PANEL ════════════════════════ */
 .admin-overlay{display:none;position:fixed;inset:0;z-index:9900;background:rgba(5,10,8,.96);backdrop-filter:blur(10px)}
 .admin-overlay.show{display:flex;animation:fadeIn .4s ease}
@@ -376,7 +376,7 @@ footer .fsmall{font-size:.75rem;opacity:.4;margin-top:1.2rem}
 .stat-card{background:rgba(var(--rgb1),.08);border:1px solid rgba(var(--rgb1),.15);border-radius:var(--rmd);padding:1.2rem;text-align:center}
 .stat-val{font-size:2rem;font-weight:700;color:var(--c1)}
 .stat-lbl{font-size:.75rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px}
-
+ 
 /* ════════════════════════ RESPONSIVE ════════════════════════ */
 @media(max-width:768px){
   nav{padding:1rem 1rem}
@@ -393,11 +393,11 @@ footer .fsmall{font-size:.75rem;opacity:.4;margin-top:1.2rem}
 </style>
 </head>
 <body>
-
+ 
 <canvas id="bg"></canvas>
 <div id="cur"></div>
 <div id="cur-ring"></div>
-
+ 
 <!-- ══ NAV ══ -->
 <nav>
   <div class="logo">
@@ -416,7 +416,7 @@ footer .fsmall{font-size:.75rem;opacity:.4;margin-top:1.2rem}
     <li><a href="#experiencia" class="nav-cta">Comenzar</a></li>
   </ul>
 </nav>
-
+ 
 <!-- ══ HERO ══ -->
 <section class="hero" id="hero">
   <div class="hero-content">
@@ -430,9 +430,9 @@ footer .fsmall{font-size:.75rem;opacity:.4;margin-top:1.2rem}
   </div>
   <div class="hero-scroll"><span>Descubrir</span><div class="scroll-arr"></div></div>
 </section>
-
+ 
 <div class="wave-div"><svg viewBox="0 0 1440 60" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style="height:60px"><path d="M0,30 C360,60 720,0 1080,30 C1260,45 1350,20 1440,30 L1440,60 L0,60 Z" fill="rgba(var(--rgb-dark),.6)"/></svg></div>
-
+ 
 <!-- ══ BENEFITS ══ -->
 <section class="benefits" id="beneficios">
   <div class="container">
@@ -449,9 +449,9 @@ footer .fsmall{font-size:.75rem;opacity:.4;margin-top:1.2rem}
     </div>
   </div>
 </section>
-
+ 
 <div class="wave-div"><svg viewBox="0 0 1440 60" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style="height:60px"><path d="M0,20 C480,60 960,0 1440,30 L1440,0 L0,0 Z" fill="rgba(var(--rgb-dark),.6)"/></svg></div>
-
+ 
 <!-- ══ ABOUT ══ -->
 <section class="about" id="sobre">
   <div class="container">
@@ -477,7 +477,7 @@ footer .fsmall{font-size:.75rem;opacity:.4;margin-top:1.2rem}
     </div>
   </div>
 </section>
-
+ 
 <!-- ══ GAMES ══ -->
 <section class="games" id="experiencia">
   <div class="container">
@@ -495,7 +495,7 @@ footer .fsmall{font-size:.75rem;opacity:.4;margin-top:1.2rem}
       <button class="tbtn" onclick="switchTab('star')">⭐ Estrellas</button>
       <button class="tbtn" onclick="switchTab('color')">🎨 Colores</button>
     </div>
-
+ 
     <!-- BREATH -->
     <div class="gpanel active" id="game-breath">
       <div class="garea">
@@ -508,7 +508,7 @@ footer .fsmall{font-size:.75rem;opacity:.4;margin-top:1.2rem}
         <button class="gbtn" id="breset" style="display:none" onclick="resetBreath()">🔄 Practicar de nuevo</button>
       </div>
     </div>
-
+ 
     <!-- CLICK CALM -->
     <div class="gpanel" id="game-click">
       <div class="garea">
@@ -518,7 +518,7 @@ footer .fsmall{font-size:.75rem;opacity:.4;margin-top:1.2rem}
         <button class="gbtn" onclick="initClick()">🌱 Nueva ronda</button>
       </div>
     </div>
-
+ 
     <!-- FIND -->
     <div class="gpanel" id="game-find">
       <div class="garea">
@@ -529,7 +529,7 @@ footer .fsmall{font-size:.75rem;opacity:.4;margin-top:1.2rem}
         <button class="gbtn" onclick="initFind()">🔍 Nueva búsqueda</button>
       </div>
     </div>
-
+ 
     <!-- BUBBLE POP -->
     <div class="gpanel" id="game-bubble">
       <div class="garea">
@@ -539,7 +539,7 @@ footer .fsmall{font-size:.75rem;opacity:.4;margin-top:1.2rem}
         <button class="gbtn" onclick="initBubble()">🫧 Nueva ronda</button>
       </div>
     </div>
-
+ 
     <!-- MEMORY -->
     <div class="gpanel" id="game-memory">
       <div class="garea">
@@ -549,7 +549,7 @@ footer .fsmall{font-size:.75rem;opacity:.4;margin-top:1.2rem}
         <button class="gbtn" onclick="initMemory()">🧠 Nueva partida</button>
       </div>
     </div>
-
+ 
     <!-- STAR CATCH -->
     <div class="gpanel" id="game-star">
       <div class="garea">
@@ -560,7 +560,7 @@ footer .fsmall{font-size:.75rem;opacity:.4;margin-top:1.2rem}
         <button class="gbtn" onclick="initStar()">⭐ Nuevo juego</button>
       </div>
     </div>
-
+ 
     <!-- COLOR MATCH -->
     <div class="gpanel" id="game-color">
       <div class="garea">
@@ -573,10 +573,10 @@ footer .fsmall{font-size:.75rem;opacity:.4;margin-top:1.2rem}
         <button class="gbtn" onclick="initColorGame()">🎨 Nueva ronda</button>
       </div>
     </div>
-
+ 
   </div>
 </section>
-
+ 
 <!-- ══ CHAT ══ -->
 <section class="chat-section" id="chat">
   <div class="container">
@@ -610,7 +610,7 @@ footer .fsmall{font-size:.75rem;opacity:.4;margin-top:1.2rem}
     </div>
   </div>
 </section>
-
+ 
 <!-- ══ TEAM ══ -->
 <section class="team" id="equipo">
   <div class="container">
@@ -625,7 +625,7 @@ footer .fsmall{font-size:.75rem;opacity:.4;margin-top:1.2rem}
     </div>
   </div>
 </section>
-
+ 
 <footer>
   <span class="flogo">SERENA</span>
   <p>Tu calma, tu equilibrio, tu bienestar</p>
@@ -633,10 +633,10 @@ footer .fsmall{font-size:.75rem;opacity:.4;margin-top:1.2rem}
   <p>Ingenieros de Sistemas — Universidad Cooperativa de Colombia</p>
   <p class="fsmall">© 2025 SERENA App — Todos los derechos reservados</p>
 </footer>
-
+ 
 <!-- ══ WIN ══ -->
 <div class="woverlay" id="wov"><div class="wcard"><span class="wemoji" id="wemoji">🌿</span><h2 class="wtitle" id="wtitle">¡Excelente!</h2><p class="wmsg" id="wmsg">Lo estás haciendo muy bien</p><button class="wclose" onclick="closeWin()">Continuar</button></div></div>
-
+ 
 <!-- ══ THEME PICKER ══ -->
 <div class="theme-overlay" id="themeOv">
   <div class="theme-panel">
@@ -655,7 +655,7 @@ footer .fsmall{font-size:.75rem;opacity:.4;margin-top:1.2rem}
     <button class="theme-close" onclick="closeTheme()">✓ Aplicar y cerrar</button>
   </div>
 </div>
-
+ 
 <!-- ══ ADMIN PANEL ══ -->
 <div class="admin-overlay" id="adminOv">
   <div class="admin-layout">
@@ -695,7 +695,7 @@ footer .fsmall{font-size:.75rem;opacity:.4;margin-top:1.2rem}
     </div>
   </div>
 </div>
-
+ 
 <script>
 /* ══════════════════════════════════════════════════════
    THEME SYSTEM
@@ -709,9 +709,9 @@ const themes = [
   { name:'Menta 🍃', c1:'#A0E8C0', c2:'#208050', c3:'#B0F0D0', c4:'#106040', dark:'8,22,14' }
 ];
 let activeTheme = 0;
-
+ 
 function hexToRgb(h){const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`${r},${g},${b}`}
-
+ 
 function applyTheme(t){
   const r=document.documentElement.style;
   r.setProperty('--c1',t.c1); r.setProperty('--c2',t.c2);
@@ -722,7 +722,7 @@ function applyTheme(t){
   // Update canvas orb colors
   if(window.orbColors) window.orbColors = [hexToRgb(t.c1).split(',').map(Number), hexToRgb(t.c2).split(',').map(Number), hexToRgb(t.c3).split(',').map(Number), hexToRgb(t.c4).split(',').map(Number), [150,200,170]];
 }
-
+ 
 function buildPresets(){
   const c=document.getElementById('presets');
   themes.forEach((t,i)=>{
@@ -734,7 +734,7 @@ function buildPresets(){
 }
 buildPresets();
 applyTheme(themes[0]);
-
+ 
 function applyCustom(){
   const t={c1:document.getElementById('cp1').value,c2:document.getElementById('cp2').value,c3:document.getElementById('cp3').value,c4:document.getElementById('cp4').value,dark:'13,31,20'};
   applyTheme(t);
@@ -742,26 +742,26 @@ function applyCustom(){
 }
 function openTheme(){document.getElementById('themeOv').classList.add('show')}
 function closeTheme(){document.getElementById('themeOv').classList.remove('show')}
-
+ 
 /* ══════════════════════════════════════════════════════
    CANVAS BACKGROUND
 ══════════════════════════════════════════════════════ */
 const canvas=document.getElementById('bg');const ctx=canvas.getContext('2d');
 let W,H,mouse={x:-999,y:-999};
 const particles=[],stars=[],ripples=[],orbs=[];
-
+ 
 window.orbColors=[[168,213,186],[167,199,231],[74,124,89],[46,94,170],[130,200,160],[100,180,210]];
-
+ 
 function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight}
 resize();window.addEventListener('resize',resize);
-
+ 
 for(let i=0;i<130;i++)stars.push({x:Math.random()*2000,y:Math.random()*1400,r:.3+Math.random()*1.3,a:Math.random(),speed:.003+Math.random()*.009,phase:Math.random()*Math.PI*2});
-
+ 
 for(let i=0;i<7;i++){const c=window.orbColors[i%window.orbColors.length];orbs.push({x:Math.random()*1600,y:Math.random()*1000,r:130+Math.random()*210,vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.18,ci:i%window.orbColors.length,alpha:.04+Math.random()*.07,phase:Math.random()*Math.PI*2})}
-
+ 
 function spawnP(x,y,vx,vy){particles.push({x:x||Math.random()*W,y:y||Math.random()*H,vx:vx!==undefined?vx:(Math.random()-.5)*.4,vy:vy!==undefined?vy:-.2-Math.random()*.5,r:.7+Math.random()*2,life:1,decay:.003+Math.random()*.004,ci:Math.floor(Math.random()*2)})}
 for(let i=0;i<90;i++)spawnP();
-
+ 
 let T=0;
 function draw(){
   T+=.007;
@@ -773,7 +773,7 @@ function draw(){
   grad.addColorStop(.5,`hsl(${165+Math.cos(T*.2)*18},40%,7%)`);
   grad.addColorStop(1,`hsl(${205+Math.cos(T*.19)*16},42%,6%)`);
   ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
-
+ 
   for(let w=0;w<5;w++){
     ctx.beginPath();
     const wY=H*(.15+w*.16)+Math.sin(T*.35+w)*45;
@@ -785,7 +785,7 @@ function draw(){
     wa.addColorStop(0,`rgba(${c1[0]},${c1[1]},${c1[2]},${wA})`);wa.addColorStop(1,`rgba(${c1[0]},${c1[1]},${c1[2]},0)`);
     ctx.fillStyle=wa;ctx.fill();
   }
-
+ 
   orbs.forEach(o=>{
     o.x+=o.vx;o.y+=o.vy;o.phase+=.004;
     if(o.x<-o.r)o.x=W+o.r;if(o.x>W+o.r)o.x=-o.r;
@@ -795,21 +795,21 @@ function draw(){
     g.addColorStop(0,`rgba(${c[0]},${c[1]},${c[2]},${pulse})`);g.addColorStop(1,`rgba(${c[0]},${c[1]},${c[2]},0)`);
     ctx.beginPath();ctx.arc(o.x,o.y,o.r,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
   });
-
+ 
   if(mouse.x>0){const mg=ctx.createRadialGradient(mouse.x,mouse.y,0,mouse.x,mouse.y,150);const mc=oc[0];mg.addColorStop(0,`rgba(${mc[0]},${mc[1]},${mc[2]},.13)`);mg.addColorStop(1,`rgba(${mc[0]},${mc[1]},${mc[2]},0)`);ctx.beginPath();ctx.arc(mouse.x,mouse.y,150,0,Math.PI*2);ctx.fillStyle=mg;ctx.fill();}
-
+ 
   stars.forEach(s=>{s.phase+=s.speed;const al=(.25+Math.sin(s.phase)*.45)*s.a;ctx.beginPath();ctx.arc(s.x%W,s.y%H,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(200,237,220,${al})`;ctx.fill();});
-
+ 
   for(let i=ripples.length-1;i>=0;i--){const rp=ripples[i];rp.r+=rp.speed;const a=rp.alpha*(1-rp.r/rp.maxR);if(a<=0||rp.r>=rp.maxR){ripples.splice(i,1);continue;}const rc=oc[rp.ci];ctx.beginPath();ctx.arc(rp.rx,rp.ry,rp.r,0,Math.PI*2);ctx.strokeStyle=`rgba(${rc[0]},${rc[1]},${rc[2]},${a})`;ctx.lineWidth=1.8;ctx.stroke();}
-
+ 
   for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.x+=p.vx+Math.sin(T+i*.4)*.18;p.y+=p.vy;p.life-=p.decay;if(p.life<=0){particles.splice(i,1);spawnP();continue;}const pc=oc[p.ci%oc.length];ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(${pc[0]},${pc[1]},${pc[2]},${p.life*.65})`;ctx.fill();}
-
+ 
   const maxP=Math.min(particles.length,40);
   for(let i=0;i<maxP;i++){for(let j=i+1;j<maxP;j++){const dx=particles[i].x-particles[j].x,dy=particles[i].y-particles[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<80){const a=(1-d/80)*.05;const lc=oc[0];ctx.beginPath();ctx.moveTo(particles[i].x,particles[i].y);ctx.lineTo(particles[j].x,particles[j].y);ctx.strokeStyle=`rgba(${lc[0]},${lc[1]},${lc[2]},${a})`;ctx.lineWidth=.5;ctx.stroke();}}}
   requestAnimationFrame(draw);
 }
 draw();
-
+ 
 /* ══════════════════════════════════════════════════════
    CURSOR
 ══════════════════════════════════════════════════════ */
@@ -819,10 +819,10 @@ document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;curEl.style.
 (function loop(){rx+=(mx-rx)*.11;ry+=(my-ry)*.11;ringEl.style.left=rx+'px';ringEl.style.top=ry+'px';requestAnimationFrame(loop);})();
 document.addEventListener('mousedown',()=>{curEl.style.transform='translate(-50%,-50%) scale(.4)';ringEl.style.width='52px';ringEl.style.height='52px';});
 document.addEventListener('mouseup',()=>{curEl.style.transform='translate(-50%,-50%) scale(1)';ringEl.style.width='34px';ringEl.style.height='34px';});
-
+ 
 let trailT=0;
 function spawnTrail(x,y){const now=Date.now();if(now-trailT<28)return;trailT=now;const d=document.createElement('div');d.className='trail';const s=2.5+Math.random()*5;d.style.cssText=`left:${x}px;top:${y}px;width:${s}px;height:${s}px;background:rgba(${Math.random()>.5?'167,199,231':'168,213,186'},.65)`;document.body.appendChild(d);setTimeout(()=>d.remove(),1200);}
-
+ 
 /* ══════════════════════════════════════════════════════
    CLICK EFFECTS (no cooldown — instant per click)
 ══════════════════════════════════════════════════════ */
@@ -847,10 +847,10 @@ const msgs=[
 let msgIdx=0;
 const MAX_MSGS=3;
 const activeMsgs=[];
-
-const BLOCKED=['button','a','input','textarea','.citem','.fitem','.memcard','.bubble','.star-obj','.cs-opt'];
+ 
+const BLOCKED=['button','a','input','textarea','.citem','.fitem','.memcard','.bubble','.star-obj','.cs-opt','.gpanel','.bpgame','.stargame','.memgrid','.cgrid','.fgrid','.colorswipe','.garea','.games','.bcont','.chat-box','.admin-overlay','.theme-overlay','.woverlay'];
 function isClickable(el){return BLOCKED.some(s=>el.closest&&el.closest(s));}
-
+ 
 function spawnMsg(x,y){
   // Remove oldest if already at max
   if(activeMsgs.length>=MAX_MSGS){
@@ -882,7 +882,7 @@ function spawnMsg(x,y){
     }
   },6000);
 }
-
+ 
 document.addEventListener('click',e=>{
   if(isClickable(e.target))return;
   // Ripple + particles
@@ -891,20 +891,20 @@ document.addEventListener('click',e=>{
   spawnMsg(e.clientX,e.clientY);
 });
 // NO scroll listener — removed intentionally
-
+ 
 /* ══════════════════════════════════════════════════════
    REVEAL
 ══════════════════════════════════════════════════════ */
 const obs=new IntersectionObserver(e=>e.forEach(en=>{if(en.isIntersecting)en.target.classList.add('on');}),{threshold:.08});
 document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
-
+ 
 /* ══════════════════════════════════════════════════════
    WIN
 ══════════════════════════════════════════════════════ */
 const wins=[{e:'🌿',t:'¡Lo estás haciendo muy bien!',m:'Cada respiro es un pequeño acto de amor hacia ti mismo.'},{e:'✨',t:'Respira, todo está en calma',m:'Has encontrado tu espacio de paz. Llévalo contigo hoy.'},{e:'🌸',t:'¡Qué mente tan serena!',m:'Tu capacidad de enfocarte es tu mayor fortaleza.'},{e:'🌊',t:'Fluyes con gracia',m:'Como el agua, tú también encontrarás tu camino.'},{e:'🦋',t:'Estás en el camino correcto',m:'Pequeñas pausas transforman días difíciles en posibles.'}];
 function showWin(){const w=wins[Math.floor(Math.random()*wins.length)];document.getElementById('wemoji').textContent=w.e;document.getElementById('wtitle').textContent=w.t;document.getElementById('wmsg').textContent=w.m;document.getElementById('wov').classList.add('show');}
 function closeWin(){document.getElementById('wov').classList.remove('show');}
-
+ 
 /* ══════════════════════════════════════════════════════
    TABS
 ══════════════════════════════════════════════════════ */
@@ -915,7 +915,7 @@ function switchTab(id){
   document.querySelectorAll('.tbtn')[map[id]].classList.add('active');
   document.getElementById('game-'+id).classList.add('active');
 }
-
+ 
 /* ══════════════════════════════════════════════════════
    GAME 1: BREATHING
 ══════════════════════════════════════════════════════ */
@@ -932,7 +932,7 @@ function runB(){
 function updB(){document.getElementById('bcnt').textContent=bCy+' / '+bTo;document.getElementById('bfill').style.width=(bCy/bTo*100)+'%';}
 function finB(){bA=false;clearTimeout(bTm);document.getElementById('blabel').textContent='¡Completado! Cuatro ciclos de respiración 🌿';document.getElementById('binner').textContent='✓';document.getElementById('breset').style.display='inline-flex';setTimeout(showWin,700);}
 function resetBreath(){clearTimeout(bTm);bA=false;bCy=0;bPh='idle';const inn=document.getElementById('binner');inn.style.transform='scale(1)';inn.style.boxShadow='0 0 30px rgba(var(--rgb1),.5),inset 0 0 20px rgba(255,255,255,.1)';inn.textContent='Toca';document.getElementById('bouter').style.transform='scale(1)';document.getElementById('bring').style.transform='scale(1)';document.getElementById('blabel').textContent='Toca el círculo para comenzar';document.getElementById('breset').style.display='none';updB();}
-
+ 
 /* ══════════════════════════════════════════════════════
    GAME 2: CLICK CALM
 ══════════════════════════════════════════════════════ */
@@ -940,7 +940,7 @@ const cE=['🌿','🍃','🌱','🌾','🌲'],oE=['📚','⏰','📝','💻','�
 let cSc=0,cEr=0,cTg=0;
 function initClick(){cSc=0;cEr=0;cTg=0;document.getElementById('cerrors').textContent='0';document.getElementById('cscore').textContent='0';const g=document.getElementById('cgrid');g.innerHTML='';const calm=new Set();while(calm.size<4)calm.add(Math.floor(Math.random()*20));cTg=4;document.getElementById('ctarget').textContent=4;for(let i=0;i<20;i++){const btn=document.createElement('button');btn.className='citem';if(calm.has(i)){btn.classList.add('calm');btn.textContent=cE[Math.floor(Math.random()*cE.length)];btn.dataset.c='1';}else{btn.textContent=oE[Math.floor(Math.random()*oE.length)];btn.dataset.c='0';}btn.addEventListener('click',handleCl);g.appendChild(btn);}}
 function handleCl(e){const b=e.currentTarget;if(b.classList.contains('found'))return;if(b.dataset.c==='1'){b.classList.remove('calm');b.classList.add('found');cSc++;document.getElementById('cscore').textContent=cSc;if(cSc>=cTg)setTimeout(showWin,400);}else{cEr++;document.getElementById('cerrors').textContent=cEr;b.classList.add('wflash');setTimeout(()=>b.classList.remove('wflash'),350);}}
-
+ 
 /* ══════════════════════════════════════════════════════
    GAME 3: FIND
 ══════════════════════════════════════════════════════ */
@@ -951,7 +951,7 @@ function updF(){if(fI<fQ.length)document.getElementById('femoji').textContent=fQ
 function bFD(){const r=document.getElementById('fdots');r.innerHTML='';fQ.forEach((_,i)=>{const d=document.createElement('div');d.className='fdot';d.id='fd'+i;r.appendChild(d);});}
 function bFG(){const g=document.getElementById('fgrid');g.innerHTML='';const all=[];fQ.forEach(t=>all.push({e:t,t:true}));for(let i=all.length;i<30;i++)all.push({e:fD[Math.floor(Math.random()*fD.length)],t:false});all.sort(()=>Math.random()-.5);all.forEach(item=>{const btn=document.createElement('button');btn.className='fitem';btn.textContent=item.e;btn.dataset.e=item.e;btn.addEventListener('click',handleF);g.appendChild(btn);});}
 function handleF(e){const b=e.currentTarget;if(b.classList.contains('correct'))return;if(b.dataset.e===fQ[fI]){b.classList.add('correct');document.getElementById('fd'+fI).classList.add('done');fI++;if(fI>=fQ.length){setTimeout(showWin,400);return;}updF();}else{b.classList.add('wflash');setTimeout(()=>b.classList.remove('wflash'),350);}}
-
+ 
 /* ══════════════════════════════════════════════════════
    GAME 4: BUBBLE POP
 ══════════════════════════════════════════════════════ */
@@ -968,7 +968,7 @@ function spawnBubble(){
   b.addEventListener('animationend',()=>{if(!b.classList.contains('popped')){bMiss++;document.getElementById('bmiss').textContent=bMiss;b.remove();}});
   arena.appendChild(b);
 }
-
+ 
 /* ══════════════════════════════════════════════════════
    GAME 5: MEMORY
 ══════════════════════════════════════════════════════ */
@@ -999,7 +999,7 @@ function handleMem(e){
     }else{setTimeout(()=>{memFlipped.forEach(c=>c.classList.remove('flipped'));memFlipped=[];memLock=false;},900);}
   }
 }
-
+ 
 /* ══════════════════════════════════════════════════════
    GAME 6: STAR CATCH
 ══════════════════════════════════════════════════════ */
@@ -1017,7 +1017,7 @@ function spawnStar(){
   s.addEventListener('animationend',()=>s.remove());
   a.appendChild(s);
 }
-
+ 
 /* ══════════════════════════════════════════════════════
    GAME 7: COLOR MATCH
 ══════════════════════════════════════════════════════ */
@@ -1034,7 +1034,7 @@ function showCgRound(){
   const c=document.getElementById('csopts');c.innerHTML='';
   opts.forEach(o=>{const btn=document.createElement('button');btn.className='cs-opt';btn.textContent=o;btn.style.background='rgba(var(--rgb1),.15)';btn.addEventListener('click',()=>{if(o===r.correct){btn.classList.add('correct-pick');cgScore++;document.getElementById('cgscore').textContent=cgScore;}else{btn.classList.add('wrong-pick');cgErr++;document.getElementById('cgerr').textContent=cgErr;}setTimeout(()=>{cgIdx++;showCgRound();},500);});c.appendChild(btn);});
 }
-
+ 
 /* ══════════════════════════════════════════════════════
    ADMIN PANEL — secret command: type "admin123"
 ══════════════════════════════════════════════════════ */
@@ -1053,7 +1053,7 @@ function adminTab(t){
   document.getElementById('adminChat').style.display=t==='chat'?'flex':'none';
   document.getElementById('adminStats').style.display=t==='stats'?'block':'none';
 }
-
+ 
 /* ══════════════════════════════════════════════════════
    CHAT — Firebase realtime multi-user + local fallback
 ══════════════════════════════════════════════════════ */
@@ -1061,17 +1061,17 @@ let nickname = 'Visitante';
 let fbListening = false;
 let localMsgs = []; // only used in demo mode
 let totalMsgs = 0, adminReplies = 0, uniqueUsers = new Set();
-
+ 
 function setNick(){
   const v = document.getElementById('nickInp').value.trim();
   if(v){ nickname = v; document.getElementById('nickInp').value = ''; addChatSys('Tu nombre es ahora: '+nickname+' 🌿'); }
 }
-
+ 
 function fmtTime(){
   const d = new Date();
   return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
 }
-
+ 
 /* Append a single message bubble to a container (no re-render) */
 function appendMsgEl(m, container, animate=true){
   const wrap = document.createElement('div');
@@ -1090,7 +1090,7 @@ function appendMsgEl(m, container, animate=true){
   container.scrollTop = container.scrollHeight;
   return wrap;
 }
-
+ 
 function addChatSys(text){
   const m = {role:'system', text};
   const uc = document.getElementById('chatMsgs');
@@ -1098,7 +1098,7 @@ function addChatSys(text){
   appendMsgEl(m, uc);
   appendMsgEl(m, ac);
 }
-
+ 
 /* Called when a new message arrives (Firebase OR local) */
 function onNewMsg(m){
   const uc = document.getElementById('chatMsgs');
@@ -1117,7 +1117,7 @@ function onNewMsg(m){
   // Hide typing indicator when admin replies
   if(m.role === 'admin') document.getElementById('chatTyping').textContent='';
 }
-
+ 
 /* Start listening — only call once */
 function startListening(){
   if(fbListening) return;
@@ -1126,7 +1126,7 @@ function startListening(){
     window._fbListen(msg => onNewMsg(msg));
   }
 }
-
+ 
 function sendChat(){
   const inp = document.getElementById('chatInp');
   const text = inp.value.trim();
@@ -1150,7 +1150,7 @@ function sendChat(){
     setTimeout(()=>{ if(typing.textContent.includes('escribiendo')) typing.textContent=''; }, 3000);
   }
 }
-
+ 
 function adminSend(){
   const inp = document.getElementById('adminInp');
   const text = inp.value.trim();
@@ -1163,7 +1163,7 @@ function adminSend(){
     onNewMsg(m);
   }
 }
-
+ 
 // Start Firebase listener when ready, or immediately in demo mode
 window.addEventListener('fbReady', ()=>{ startListening(); });
 // In demo mode or if FB loads after page
@@ -1174,7 +1174,7 @@ setTimeout(()=>{
     addChatSys('Modo demo activo. Configura Firebase para chat online real. 🔧');
   }
 }, 1500);
-
+ 
 /* INIT GAMES */
 initClick();initFind();initColorGame();
 </script>
