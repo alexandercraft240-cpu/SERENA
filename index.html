@@ -1,418 +1,1080 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <!-- Metadatos básicos del documento -->
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SERENA — Tu calma, tu equilibrio</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Título de la página -->
-    <title>SERENA — Tu calma, tu equilibrio</title>
+<!-- ══ FIREBASE ══ -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, push, onValue, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-    <!-- Tipografía principal del proyecto -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+  // ╔══════════════════════════════════════════════╗
+  // ║  PEGA AQUÍ TU firebaseConfig DE FIREBASE     ║
+  // ╚══════════════════════════════════════════════╝
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
-    <!-- Hoja de estilos principal -->
-    <link rel="stylesheet" href="css/style.css" />
-  </head>
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyB3z7qf0lM3s8kIzJcq7AqUJLkU7bVVkLo",
+  authDomain: "serena-chat.firebaseapp.com",
+  projectId: "serena-chat",
+  storageBucket: "serena-chat.firebasestorage.app",
+  messagingSenderId: "820106105245",
+  appId: "1:820106105245:web:daa40206dff5a34b249f74",
+  measurementId: "G-KWMBLLT8QV"
+};
 
-  <body>
-    <!-- Fondo animado y cursor personalizado -->
-    <canvas id="bg"></canvas>
-    <div id="cur"></div>
-    <div id="cur-ring"></div>
+// Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const msgsRef = ref(db, 'serena_chat');
 
-    <!-- =========================
-         NAVEGACIÓN PRINCIPAL
-         ========================= -->
-    <nav>
-      <div class="logo">
-        <div class="logo-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="white" aria-hidden="true">
-            <path d="M12 2C8 4 4 8 4 13c0 4.4 3.6 8 8 8s8-3.6 8-8c0-4.5-3.5-8.6-8-11z" />
-            <path
-              d="M12 6v14"
-              stroke="rgba(255,255,255,.4)"
-              stroke-width="1.5"
-              fill="none"
-            />
-          </svg>
+  // Exponer al scope global para usar en funciones no-module
+  window._fbPush = (data) => push(msgsRef, { ...data, ts: serverTimestamp() });
+  window._fbListen = (cb) => onValue(msgsRef, snap => {
+    const msgs = [];
+    snap.forEach(child => msgs.push({ id: child.key, ...child.val() }));
+    cb(msgs);
+  });
+  window._fbReady = true;
+
+  console.log('Firebase conectado ✓');
+</script>
+
+<style>
+/* ════════════════════════ RESET & VARS ════════════════════════ */
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  /* THEME COLORS — cambian dinámicamente */
+  --c1:#A8D5BA; --c2:#4A7C59; --c3:#A7C7E7; --c4:#2E5EAA;
+  --bg-dark:#0d1f14; --bg-mid:#0a1810; --bg-light:#122218;
+  --text-bright:#e8f7ef; --text-mid:rgba(212,240,226,.78); --text-dim:rgba(200,237,218,.6);
+  --rxl:50px; --rlg:32px; --rmd:20px; --rsm:12px;
+  --transition-theme: background .6s ease, color .6s ease, border-color .6s ease, box-shadow .6s ease;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Poppins',sans-serif;overflow-x:hidden;cursor:none;background:var(--bg-dark);color:var(--text-bright);transition:background .6s}
+
+/* ════════════════════════ CANVAS ════════════════════════ */
+#bg{position:fixed;inset:0;z-index:0;transition:filter .8s}
+
+/* ════════════════════════ CURSOR ════════════════════════ */
+#cur{position:fixed;width:13px;height:13px;border-radius:50%;background:rgba(var(--rgb1),.9);pointer-events:none;z-index:99999;transform:translate(-50%,-50%);mix-blend-mode:screen;transition:transform .1s}
+#cur-ring{position:fixed;width:34px;height:34px;border-radius:50%;border:1.5px solid rgba(var(--rgb1),.55);pointer-events:none;z-index:99998;transform:translate(-50%,-50%)}
+.trail{position:fixed;border-radius:50%;pointer-events:none;z-index:99990;transform:translate(-50%,-50%);animation:tf 1.2s ease forwards}
+@keyframes tf{0%{opacity:.75;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(0)}}
+
+/* ════════════════════════ MOTIVATIONAL ════════════════════════ */
+.moti{position:fixed;z-index:8500;pointer-events:none;padding:1rem 1.6rem;border-radius:var(--rlg);background:rgba(var(--rgb-dark),.65);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid rgba(var(--rgb1),.38);color:var(--c1);max-width:285px;font-size:.85rem;font-weight:400;line-height:1.65;text-align:center;white-space:pre-line;
+  animation:motiPop .35s cubic-bezier(.34,1.56,.64,1) forwards, motiFade 6s .3s ease forwards}
+@keyframes motiPop{from{opacity:0;transform:scale(.75) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes motiFade{0%{opacity:1;transform:translateY(0)}70%{opacity:1;transform:translateY(-8px)}100%{opacity:0;transform:translateY(-22px)}}
+
+/* ════════════════════════ NAV ════════════════════════ */
+nav{position:fixed;top:0;left:0;right:0;z-index:600;display:flex;align-items:center;justify-content:space-between;padding:1rem 2.5rem;background:rgba(var(--rgb-dark),.8);backdrop-filter:blur(20px);border-bottom:1px solid rgba(var(--rgb1),.2);transition:var(--transition-theme)}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--c1),var(--c2));border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;animation:lb 4s ease-in-out infinite;box-shadow:0 0 18px rgba(var(--rgb1),.4);transition:var(--transition-theme)}
+@keyframes lb{0%,100%{box-shadow:0 0 18px rgba(var(--rgb1),.4)}50%{box-shadow:0 0 32px rgba(var(--rgb1),.75)}}
+.logo-name{font-size:1.3rem;font-weight:700;color:var(--text-bright);letter-spacing:.5px}
+.nav-links{display:flex;gap:2rem;list-style:none;align-items:center}
+.nav-links a{text-decoration:none;color:var(--text-mid);font-size:.88rem;font-weight:500;transition:color .3s;cursor:none}
+.nav-links a:hover{color:var(--c1)}
+.nav-cta{background:var(--c4)!important;color:var(--text-bright)!important;padding:.5rem 1.2rem;border-radius:var(--rxl)!important;box-shadow:0 0 16px rgba(var(--rgb4),.5)}
+.nav-theme-btn{background:rgba(var(--rgb1),.15);color:var(--c1);border:1px solid rgba(var(--rgb1),.3);padding:.45rem 1rem;border-radius:var(--rxl);font-family:'Poppins',sans-serif;font-size:.82rem;font-weight:500;cursor:none;transition:all .3s}
+.nav-theme-btn:hover{background:rgba(var(--rgb1),.25)}
+
+/* ════════════════════════ SECTIONS ════════════════════════ */
+section{position:relative;z-index:2;padding:5rem 2rem}
+.container{max-width:1080px;margin:0 auto}
+.section-label{font-size:.78rem;font-weight:600;color:var(--c1);letter-spacing:1.8px;text-transform:uppercase;margin-bottom:.7rem;transition:var(--transition-theme)}
+.section-title{font-size:clamp(1.8rem,4vw,2.5rem);font-weight:700;color:var(--text-bright);margin-bottom:1rem;line-height:1.3}
+.section-sub{font-size:1rem;color:var(--text-dim);line-height:1.8;max-width:560px}
+.reveal{opacity:0;transform:translateY(36px);transition:opacity 1s cubic-bezier(.22,1,.36,1),transform 1s cubic-bezier(.22,1,.36,1)}
+.reveal.on{opacity:1;transform:none}
+
+/* ════════════════════════ HERO ════════════════════════ */
+.hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:7rem 2rem 4rem}
+.hero-content{position:relative;z-index:3;max-width:700px}
+.hero-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(var(--rgb1),.12);color:var(--c1);font-size:.8rem;font-weight:600;padding:.4rem 1.1rem;border-radius:var(--rxl);margin-bottom:1.5rem;border:1px solid rgba(var(--rgb1),.25);animation:fsu .9s ease both;transition:var(--transition-theme)}
+.bdot{width:7px;height:7px;border-radius:50%;background:var(--c1);animation:pulse 2.2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.7)}}
+@keyframes fsu{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.hero h1{font-size:clamp(2.4rem,6vw,3.8rem);font-weight:700;line-height:1.18;color:var(--text-bright);margin-bottom:1.2rem;animation:fsu .9s .2s ease both;text-shadow:0 2px 30px rgba(0,0,0,.3)}
+.hero h1 span{color:var(--c1);text-shadow:0 0 40px rgba(var(--rgb1),.6);transition:var(--transition-theme)}
+.hero p{font-size:1.1rem;color:var(--text-mid);line-height:1.8;margin-bottom:2.5rem;font-weight:300;animation:fsu .9s .4s ease both}
+.btn-primary{display:inline-flex;align-items:center;gap:9px;background:var(--c4);color:#e8f0ff;font-family:'Poppins',sans-serif;font-size:1rem;font-weight:600;padding:.95rem 2.4rem;border-radius:var(--rxl);border:none;cursor:none;transition:transform .35s,box-shadow .35s,background .6s;text-decoration:none;animation:fsu .9s .6s ease both;box-shadow:0 6px 30px rgba(var(--rgb4),.5)}
+.btn-primary:hover{transform:translateY(-4px);box-shadow:0 14px 40px rgba(var(--rgb4),.65)}
+.hero-scroll{position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;color:rgba(var(--rgb1),.6);font-size:.75rem;letter-spacing:.5px;animation:scrollBob 2.5s ease-in-out infinite}
+@keyframes scrollBob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-8px)}}
+.scroll-arr{width:20px;height:20px;border-right:2px solid var(--c1);border-bottom:2px solid var(--c1);transform:rotate(45deg);margin-top:2px;opacity:.7;transition:var(--transition-theme)}
+
+/* ════════════════════════ BENEFITS ════════════════════════ */
+.benefits{background:rgba(var(--rgb-dark),.6);backdrop-filter:blur(12px)}
+.benefits-header{text-align:center;margin-bottom:3.5rem}
+.benefits-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.5rem}
+.bcard{background:rgba(var(--rgb1),.07);border-radius:var(--rmd);padding:2rem 1.5rem;border:1px solid rgba(var(--rgb1),.18);transition:transform .5s cubic-bezier(.22,1,.36,1),box-shadow .5s,background .5s;position:relative;overflow:hidden;cursor:none}
+.bcard:hover{transform:translateY(-7px) scale(1.015);box-shadow:0 20px 50px rgba(var(--rgb2),.25);background:rgba(var(--rgb1),.13)}
+.bcard::before{content:'';position:absolute;top:-50px;right:-50px;width:130px;height:130px;border-radius:50%;background:radial-gradient(circle,rgba(var(--rgb1),.18),transparent 65%);animation:orbcard 7s ease-in-out infinite alternate;transition:var(--transition-theme)}
+@keyframes orbcard{0%{transform:translate(0,0)}100%{transform:translate(-12px,14px)}}
+.bcard h3{font-size:1.1rem;font-weight:600;color:var(--c1);margin-bottom:.6rem;transition:var(--transition-theme)}
+.bcard p{font-size:.9rem;color:var(--text-dim);line-height:1.7}
+.bicon{font-size:2rem;margin-bottom:1rem;display:block;filter:drop-shadow(0 0 8px rgba(var(--rgb1),.5))}
+
+/* ════════════════════════ ABOUT ════════════════════════ */
+.about{background:rgba(var(--rgb-dark),.65);backdrop-filter:blur(10px)}
+.about-inner{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center}
+.about-visual{background:linear-gradient(145deg,rgba(var(--rgb1),.15),rgba(var(--rgb3),.15));border:1px solid rgba(var(--rgb1),.2);border-radius:var(--rlg);min-height:320px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;transition:var(--transition-theme)}
+.phone{width:120px;height:215px;background:rgba(var(--rgb-dark),.9);border-radius:22px;display:flex;flex-direction:column;align-items:center;padding:16px 12px;gap:10px;border:1px solid rgba(var(--rgb1),.3);box-shadow:0 0 40px rgba(var(--rgb1),.15);position:relative;z-index:2;animation:pbob 4s ease-in-out infinite;transition:var(--transition-theme)}
+@keyframes pbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.pbar{width:40px;height:4px;background:rgba(var(--rgb1),.3);border-radius:2px;margin-bottom:4px}
+.pcircle{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--c1),var(--c2));display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(var(--rgb1),.4);transition:var(--transition-theme)}
+.pline{width:80%;height:6px;background:rgba(var(--rgb1),.15);border-radius:3px}
+.plines{width:55%}
+.pbtn{width:80%;height:22px;background:var(--c4);border-radius:30px;margin-top:4px;opacity:.8;transition:var(--transition-theme)}
+.feats{margin-top:1.8rem;display:flex;flex-direction:column;gap:.9rem}
+.feat{display:flex;align-items:center;gap:10px;font-size:.9rem;color:var(--text-mid)}
+.fchk{width:20px;height:20px;border-radius:50%;background:rgba(var(--rgb1),.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--c1);font-size:.75rem;font-weight:700;border:1px solid rgba(var(--rgb1),.3);transition:var(--transition-theme)}
+
+/* ════════════════════════ WAVE ════════════════════════ */
+.wave-div{width:100%;overflow:hidden;line-height:0;position:relative;z-index:2}
+.wave-div svg{display:block;width:100%}
+
+/* ════════════════════════ GAMES ════════════════════════ */
+.games{background:rgba(var(--rgb-dark),.6);backdrop-filter:blur(12px)}
+.games-header{text-align:center;margin-bottom:3rem}
+.gtabs{display:flex;justify-content:center;gap:.8rem;flex-wrap:wrap;margin-bottom:3rem}
+.tbtn{background:rgba(var(--rgb1),.1);color:var(--c1);font-family:'Poppins',sans-serif;font-size:.82rem;font-weight:500;padding:.55rem 1.2rem;border-radius:var(--rxl);border:1px solid rgba(var(--rgb1),.2);cursor:none;transition:all .35s}
+.tbtn.active,.tbtn:hover{background:var(--c2);color:#d4f0e2;border-color:var(--c2);box-shadow:0 4px 20px rgba(var(--rgb2),.4)}
+.gpanel{display:none;animation:fadeIn .5s ease}
+.gpanel.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── SHARED GAME STYLES ── */
+.garea{text-align:center;padding:2rem 1rem}
+.gbtn{background:var(--c4);color:#d4f0e2;font-family:'Poppins',sans-serif;font-size:.9rem;font-weight:600;padding:.72rem 1.8rem;border-radius:var(--rxl);border:none;cursor:none;margin-top:1.4rem;transition:transform .3s,box-shadow .3s,background .6s;display:inline-flex;align-items:center;gap:7px;box-shadow:0 4px 20px rgba(var(--rgb4),.4)}
+.gbtn:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(var(--rgb4),.6)}
+
+/* ── BREATHING ── */
+.blabel{font-size:1rem;color:var(--text-dim);margin-bottom:1.5rem;font-weight:300;min-height:1.5rem;transition:all .6s}
+.bcont{position:relative;width:200px;height:200px;margin:0 auto 2rem;cursor:none}
+.bouter{position:absolute;inset:0;border-radius:50%;background:rgba(var(--rgb1),.08);transition:transform 4s cubic-bezier(.4,0,.2,1);border:1px solid rgba(var(--rgb1),.15)}
+.bring{position:absolute;inset:8px;border-radius:50%;background:rgba(var(--rgb1),.15);transition:transform 4s cubic-bezier(.4,0,.2,1)}
+.binner{position:absolute;inset:28px;border-radius:50%;background:linear-gradient(135deg,var(--c1),var(--c2));display:flex;align-items:center;justify-content:center;color:white;font-size:.85rem;font-weight:600;transition:all 4s cubic-bezier(.4,0,.2,1);box-shadow:0 0 30px rgba(var(--rgb1),.5),inset 0 0 20px rgba(255,255,255,.1);cursor:none}
+.bcnt{font-size:1.8rem;font-weight:700;color:var(--c1);margin-bottom:.5rem;text-shadow:0 0 20px rgba(var(--rgb1),.5);transition:var(--transition-theme)}
+.bprog{width:200px;margin:0 auto;height:5px;background:rgba(var(--rgb1),.15);border-radius:3px}
+.bfill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--c1),var(--c2));transition:width .8s ease,background .6s;box-shadow:0 0 10px rgba(var(--rgb1),.5)}
+
+/* ── CLICK GAME ── */
+.csrow{display:flex;justify-content:center;gap:2rem;margin-bottom:1.5rem}
+.csv{font-size:1.7rem;font-weight:700;color:var(--c1);text-shadow:0 0 15px rgba(var(--rgb1),.5);transition:var(--transition-theme)}
+.csl{font-size:.7rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px}
+.cgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;max-width:400px;margin:0 auto 1rem;align-content:center}
+.citem{aspect-ratio:1;border-radius:50%;border:none;cursor:none;transition:all .4s ease;font-size:1.3rem;display:flex;align-items:center;justify-content:center;background:rgba(var(--rgb1),.08);border:1px solid rgba(var(--rgb1),.12)}
+.citem.calm{background:radial-gradient(circle,rgba(var(--rgb1),.45),rgba(var(--rgb2),.5));box-shadow:0 0 20px rgba(var(--rgb1),.55);animation:cg 2.5s ease-in-out infinite;border-color:rgba(var(--rgb1),.5)}
+@keyframes cg{0%,100%{box-shadow:0 0 20px rgba(var(--rgb1),.5)}50%{box-shadow:0 0 40px rgba(var(--rgb1),.85),0 0 60px rgba(var(--rgb1),.3)}}
+.citem.found{background:rgba(var(--rgb2),.2);opacity:.4;pointer-events:none;transform:scale(.85)}
+.citem.wflash{animation:shake .35s ease}
+
+/* ── FIND GAME ── */
+.ftarget{display:inline-flex;align-items:center;gap:8px;background:rgba(var(--rgb1),.1);border:1px solid rgba(var(--rgb1),.25);color:var(--c1);font-size:.88rem;font-weight:600;padding:.45rem 1.1rem;border-radius:var(--rxl);margin-bottom:1.5rem;transition:var(--transition-theme)}
+.fgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;max-width:420px;margin:0 auto 1rem}
+.fitem{aspect-ratio:1;border-radius:var(--rsm);border:1px solid rgba(var(--rgb1),.18);background:rgba(var(--rgb1),.05);cursor:none;font-size:1.3rem;display:flex;align-items:center;justify-content:center;transition:all .3s}
+.fitem:hover{background:rgba(var(--rgb1),.18);transform:scale(1.1);border-color:rgba(var(--rgb1),.35)}
+.fitem.correct{background:linear-gradient(135deg,rgba(var(--rgb1),.45),rgba(var(--rgb2),.5));border-color:var(--c1);animation:pop .4s ease;pointer-events:none;box-shadow:0 0 20px rgba(var(--rgb1),.5)}
+@keyframes pop{0%{transform:scale(.7)}60%{transform:scale(1.25)}100%{transform:scale(1)}}
+.fdots{display:flex;justify-content:center;gap:.45rem;flex-wrap:wrap;margin-bottom:.8rem}
+.fdot{width:9px;height:9px;border-radius:50%;background:rgba(var(--rgb1),.2);transition:all .4s;border:1px solid rgba(var(--rgb1),.2)}
+.fdot.done{background:var(--c1);box-shadow:0 0 8px rgba(var(--rgb1),.6)}
+
+/* ── BUBBLE POP GAME ── */
+.bpgame{position:relative;width:100%;max-width:480px;height:320px;margin:0 auto;border-radius:var(--rmd);background:rgba(var(--rgb1),.05);border:1px solid rgba(var(--rgb1),.15);overflow:hidden}
+.bubble{position:absolute;border-radius:50%;cursor:none;display:flex;align-items:center;justify-content:center;font-size:1.2rem;transition:transform .2s;animation:bubbleRise linear forwards}
+@keyframes bubbleRise{0%{transform:translateY(0) scale(1)}100%{transform:translateY(-380px) scale(.8)}}
+.bubble:hover{transform:scale(1.15)}
+.bubble.popped{animation:bubblePop .35s ease forwards!important}
+@keyframes bubblePop{0%{transform:scale(1)}50%{transform:scale(1.5);opacity:.7}100%{transform:scale(0);opacity:0}}
+
+/* ── MEMORY GAME ── */
+.memgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:360px;margin:0 auto 1rem}
+.memcard{aspect-ratio:1;border-radius:var(--rsm);cursor:none;perspective:600px;transition:transform .3s}
+.memcard-inner{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.4,0,.2,1)}
+.memcard.flipped .memcard-inner{transform:rotateY(180deg)}
+.memcard-front,.memcard-back{position:absolute;inset:0;border-radius:var(--rsm);display:flex;align-items:center;justify-content:center;backface-visibility:hidden;font-size:1.5rem}
+.memcard-front{background:linear-gradient(135deg,rgba(var(--rgb1),.2),rgba(var(--rgb2),.25));border:1px solid rgba(var(--rgb1),.3)}
+.memcard-back{background:rgba(var(--rgb-dark),.8);border:1px solid rgba(var(--rgb1),.15);transform:rotateY(180deg)}
+.memcard.matched .memcard-inner{animation:matchGlow .5s ease}
+@keyframes matchGlow{0%,100%{box-shadow:none}50%{box-shadow:0 0 25px rgba(var(--rgb1),.8)}}
+
+/* ── ZEN GARDEN ── */
+.zengame{position:relative;width:100%;max-width:480px;height:280px;margin:0 auto;border-radius:var(--rmd);overflow:hidden;cursor:none}
+.zen-canvas{width:100%;height:100%;display:block}
+.zen-instructions{font-size:.85rem;color:var(--text-dim);margin-bottom:1rem}
+
+/* ── STAR CATCH ── */
+.stargame{position:relative;width:100%;max-width:480px;height:300px;margin:0 auto;border-radius:var(--rmd);background:rgba(var(--rgb-dark),.8);border:1px solid rgba(var(--rgb1),.15);overflow:hidden}
+.star-obj{position:absolute;cursor:none;font-size:1.6rem;animation:starFloat linear forwards;transition:transform .2s}
+@keyframes starFloat{0%{transform:translateY(-30px) rotate(0deg)}100%{transform:translateY(320px) rotate(360deg)}}
+.star-obj.caught{animation:starCatch .4s ease forwards!important}
+@keyframes starCatch{0%{transform:scale(1)}50%{transform:scale(1.8);opacity:.6}100%{transform:scale(0);opacity:0}}
+.star-hud{display:flex;justify-content:center;gap:2rem;margin-bottom:.8rem}
+.star-stat{text-align:center}
+.star-val{font-size:1.6rem;font-weight:700;color:var(--c1);text-shadow:0 0 12px rgba(var(--rgb1),.5)}
+.star-lbl{font-size:.7rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px}
+.star-bar-wrap{width:200px;margin:0 auto .8rem;height:5px;background:rgba(var(--rgb1),.15);border-radius:3px}
+.star-bar{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--c1),var(--c2));transition:width .3s ease,background .6s}
+
+/* ── COLOR SWIPE GAME ── */
+.colorswipe{max-width:460px;margin:0 auto}
+.cs-prompt{font-size:1.1rem;font-weight:600;color:var(--text-bright);margin-bottom:1.2rem;min-height:1.6rem}
+.cs-target{display:inline-block;font-size:2.5rem;margin-bottom:1.5rem;filter:drop-shadow(0 0 12px rgba(var(--rgb1),.6))}
+.cs-options{display:flex;justify-content:center;gap:1rem;flex-wrap:wrap}
+.cs-opt{width:64px;height:64px;border-radius:50%;cursor:none;border:2px solid rgba(255,255,255,.15);transition:transform .3s,box-shadow .3s;font-size:1.5rem;display:flex;align-items:center;justify-content:center}
+.cs-opt:hover{transform:scale(1.15);box-shadow:0 0 20px rgba(255,255,255,.25)}
+.cs-opt.correct-pick{animation:correctBounce .5s ease}
+@keyframes correctBounce{0%{transform:scale(1)}40%{transform:scale(1.35)}70%{transform:scale(.9)}100%{transform:scale(1)}}
+.cs-opt.wrong-pick{animation:shake .35s ease}
+.cs-progress{font-size:.85rem;color:var(--text-dim);margin-bottom:.5rem}
+
+/* ═══ SHARED GAME ANIM ═══ */
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* ════════════════════════ CHAT SECTION ════════════════════════ */
+.chat-section{background:rgba(var(--rgb-dark),.65);backdrop-filter:blur(12px)}
+.chat-section .section-sub{margin:0 auto}
+.chat-box{max-width:680px;margin:2.5rem auto 0;border-radius:var(--rlg);background:rgba(var(--rgb-dark),.85);border:1px solid rgba(var(--rgb1),.2);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4);transition:var(--transition-theme)}
+.chat-header{display:flex;align-items:center;gap:12px;padding:1.2rem 1.5rem;background:rgba(var(--rgb1),.1);border-bottom:1px solid rgba(var(--rgb1),.15)}
+.chat-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--c1),var(--c2));display:flex;align-items:center;justify-content:center;font-size:1.1rem;animation:lb 4s ease-in-out infinite;flex-shrink:0}
+.chat-info{flex:1}
+.chat-name{font-size:.95rem;font-weight:600;color:var(--text-bright)}
+.chat-status{font-size:.75rem;color:var(--c1);display:flex;align-items:center;gap:5px}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--c1);animation:pulse 2s infinite}
+.chat-msgs{height:300px;overflow-y:auto;padding:1.2rem;display:flex;flex-direction:column;gap:.8rem;scroll-behavior:smooth}
+.chat-msgs::-webkit-scrollbar{width:4px}
+.chat-msgs::-webkit-scrollbar-track{background:transparent}
+.chat-msgs::-webkit-scrollbar-thumb{background:rgba(var(--rgb1),.3);border-radius:2px}
+.msg{max-width:78%;padding:.65rem 1rem;border-radius:18px;font-size:.88rem;line-height:1.55;animation:msgPop .35s cubic-bezier(.34,1.56,.64,1)}
+@keyframes msgPop{from{opacity:0;transform:scale(.85) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.msg.user{align-self:flex-end;background:var(--c4);color:#e8f0ff;border-bottom-right-radius:4px;box-shadow:0 2px 12px rgba(var(--rgb4),.3);transition:background .6s}
+.msg.admin{align-self:flex-start;background:rgba(var(--rgb1),.18);color:var(--text-bright);border-bottom-left-radius:4px;border:1px solid rgba(var(--rgb1),.2)}
+.msg.system{align-self:center;background:rgba(var(--rgb1),.08);color:var(--text-dim);font-size:.78rem;font-style:italic;border-radius:20px;padding:.4rem .9rem;border:1px solid rgba(var(--rgb1),.12)}
+.msg-time{font-size:.65rem;opacity:.55;margin-top:.3rem;text-align:right}
+.chat-input-row{display:flex;gap:.7rem;padding:1rem 1.2rem;border-top:1px solid rgba(var(--rgb1),.15)}
+.chat-input{flex:1;background:rgba(var(--rgb1),.08);border:1px solid rgba(var(--rgb1),.2);border-radius:var(--rxl);padding:.65rem 1.1rem;font-family:'Poppins',sans-serif;font-size:.88rem;color:var(--text-bright);outline:none;transition:border-color .3s,box-shadow .3s;cursor:text}
+.chat-input::placeholder{color:var(--text-dim)}
+.chat-input:focus{border-color:rgba(var(--rgb1),.5);box-shadow:0 0 0 3px rgba(var(--rgb1),.12)}
+.chat-send{background:var(--c2);color:white;border:none;width:40px;height:40px;border-radius:50%;cursor:none;display:flex;align-items:center;justify-content:center;transition:transform .2s,box-shadow .2s,background .6s;flex-shrink:0}
+.chat-send:hover{transform:scale(1.1);box-shadow:0 4px 16px rgba(var(--rgb2),.5)}
+.chat-nickname-row{padding:.8rem 1.2rem;border-bottom:1px solid rgba(var(--rgb1),.1);display:flex;gap:.6rem;align-items:center}
+.chat-nick-inp{flex:1;background:rgba(var(--rgb1),.08);border:1px solid rgba(var(--rgb1),.15);border-radius:var(--rxl);padding:.5rem 1rem;font-family:'Poppins',sans-serif;font-size:.82rem;color:var(--text-bright);outline:none;cursor:text}
+.chat-nick-inp::placeholder{color:var(--text-dim);font-size:.8rem}
+.chat-nick-btn{background:rgba(var(--rgb1),.2);color:var(--c1);border:1px solid rgba(var(--rgb1),.3);border-radius:var(--rxl);padding:.45rem 1rem;font-family:'Poppins',sans-serif;font-size:.8rem;cursor:none;transition:all .3s;white-space:nowrap}
+.chat-nick-btn:hover{background:rgba(var(--rgb1),.35)}
+.chat-typing{padding:.4rem 1.2rem;font-size:.75rem;color:var(--text-dim);min-height:1.4rem;font-style:italic}
+
+/* ════════════════════════ TEAM ════════════════════════ */
+.team{background:rgba(var(--rgb-dark),.7);backdrop-filter:blur(12px)}
+.team-header{text-align:center;margin-bottom:3.5rem}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:2rem;max-width:700px;margin:0 auto}
+.tcard{background:rgba(var(--rgb1),.06);border-radius:var(--rlg);padding:2.5rem 2rem;text-align:center;border:1px solid rgba(var(--rgb1),.15);transition:transform .5s cubic-bezier(.22,1,.36,1),box-shadow .5s,background .5s;position:relative;overflow:hidden;cursor:none}
+.tcard:hover{transform:translateY(-8px);box-shadow:0 24px 60px rgba(var(--rgb2),.2);background:rgba(var(--rgb1),.1)}
+.tcard::before{content:'';position:absolute;top:-70px;left:-70px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(var(--rgb1),.12),transparent 65%);pointer-events:none;animation:orbcard 8s ease-in-out infinite alternate}
+.tavatar{width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,var(--c1),var(--c2));display:flex;align-items:center;justify-content:center;margin:0 auto 1.2rem;font-size:1.7rem;font-weight:700;color:white;animation:lb 4s ease-in-out infinite;box-shadow:0 0 30px rgba(var(--rgb1),.35);transition:var(--transition-theme)}
+.tname{font-size:1.2rem;font-weight:700;color:var(--text-bright);margin-bottom:.3rem}
+.trole{font-size:.82rem;font-weight:600;color:var(--c1);margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.8px;transition:var(--transition-theme)}
+.tuni{font-size:.82rem;color:var(--text-dim);margin-bottom:1rem;line-height:1.6}
+.tbadge{display:inline-flex;align-items:center;gap:5px;background:rgba(var(--rgb1),.12);color:var(--c1);font-size:.78rem;font-weight:600;padding:.35rem .9rem;border-radius:var(--rxl);border:1px solid rgba(var(--rgb1),.2);transition:var(--transition-theme)}
+
+/* ════════════════════════ FOOTER ════════════════════════ */
+footer{background:rgba(var(--rgb-dark),.95);color:var(--text-dim);text-align:center;padding:3.5rem 2rem;position:relative;z-index:2;border-top:1px solid rgba(var(--rgb1),.12);transition:var(--transition-theme)}
+footer::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(var(--rgb1),.08),transparent 60%);pointer-events:none}
+.flogo{font-size:1.8rem;font-weight:700;color:var(--text-bright);display:block;margin-bottom:.5rem;letter-spacing:.5px;text-shadow:0 0 20px rgba(var(--rgb1),.4);transition:var(--transition-theme)}
+footer p{font-size:.87rem;margin-top:.4rem;line-height:1.7}
+footer .fsmall{font-size:.75rem;opacity:.4;margin-top:1.2rem}
+
+/* ════════════════════════ WIN ════════════════════════ */
+.woverlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(var(--rgb-dark),.88);backdrop-filter:blur(16px);align-items:center;justify-content:center}
+.woverlay.show{display:flex;animation:fadeIn .6s ease}
+.wcard{background:rgba(var(--rgb-dark),.97);border:1px solid rgba(var(--rgb1),.3);border-radius:var(--rlg);padding:3rem 2.5rem;text-align:center;max-width:400px;box-shadow:0 0 80px rgba(var(--rgb1),.15);animation:su .65s cubic-bezier(.22,1,.36,1)}
+@keyframes su{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+.wemoji{font-size:3.5rem;display:block;margin-bottom:1rem;filter:drop-shadow(0 0 16px rgba(var(--rgb1),.7));animation:wspin .8s ease}
+@keyframes wspin{0%{transform:scale(.7) rotate(-10deg)}70%{transform:scale(1.15) rotate(4deg)}100%{transform:scale(1) rotate(0)}}
+.wtitle{font-size:1.5rem;font-weight:700;color:var(--c1);margin-bottom:.5rem;text-shadow:0 0 20px rgba(var(--rgb1),.4);transition:var(--transition-theme)}
+.wmsg{font-size:.98rem;color:var(--text-mid);line-height:1.7;margin-bottom:1.5rem}
+.wclose{background:var(--c2);color:#d4f0e2;font-family:'Poppins',sans-serif;font-size:.92rem;font-weight:600;padding:.7rem 2rem;border-radius:var(--rxl);border:none;cursor:none;transition:all .3s,background .6s;box-shadow:0 4px 16px rgba(var(--rgb2),.5)}
+.wclose:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(var(--rgb2),.7)}
+
+/* ════════════════════════ THEME PICKER ════════════════════════ */
+.theme-overlay{display:none;position:fixed;inset:0;z-index:9800;background:rgba(var(--rgb-dark),.88);backdrop-filter:blur(16px);align-items:center;justify-content:center}
+.theme-overlay.show{display:flex;animation:fadeIn .5s ease}
+.theme-panel{background:rgba(var(--rgb-dark),.97);border:1px solid rgba(var(--rgb1),.25);border-radius:var(--rlg);padding:2.5rem;max-width:520px;width:90%;max-height:88vh;overflow-y:auto}
+.theme-panel h2{font-size:1.4rem;font-weight:700;color:var(--c1);margin-bottom:.4rem;text-align:center}
+.theme-panel p{font-size:.85rem;color:var(--text-dim);text-align:center;margin-bottom:2rem}
+.theme-presets{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem;margin-bottom:2rem}
+.preset-btn{border-radius:var(--rmd);overflow:hidden;cursor:none;border:2px solid transparent;transition:transform .3s,border-color .3s;position:relative}
+.preset-btn:hover{transform:scale(1.04)}
+.preset-btn.active{border-color:white}
+.preset-swatch{height:60px;display:flex}
+.preset-swatch div{flex:1}
+.preset-label{text-align:center;font-size:.75rem;color:var(--text-dim);padding:.4rem;background:rgba(var(--rgb-dark),.9)}
+.theme-custom h3{font-size:1rem;font-weight:600;color:var(--text-bright);margin-bottom:1.2rem}
+.color-pickers{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem}
+.cp-row{display:flex;flex-direction:column;gap:.4rem}
+.cp-row label{font-size:.78rem;color:var(--text-dim);letter-spacing:.5px;text-transform:uppercase}
+.cp-row input[type=color]{width:100%;height:38px;border:1px solid rgba(var(--rgb1),.2);border-radius:var(--rsm);background:rgba(var(--rgb1),.05);cursor:none;padding:2px}
+.theme-close{display:block;width:100%;background:var(--c2);color:white;font-family:'Poppins',sans-serif;font-size:.92rem;font-weight:600;padding:.72rem;border-radius:var(--rxl);border:none;cursor:none;margin-top:.5rem;transition:all .3s}
+.theme-close:hover{opacity:.85}
+
+/* ════════════════════════ ADMIN PANEL ════════════════════════ */
+.admin-overlay{display:none;position:fixed;inset:0;z-index:9900;background:rgba(5,10,8,.96);backdrop-filter:blur(10px)}
+.admin-overlay.show{display:flex;animation:fadeIn .4s ease}
+.admin-layout{display:flex;width:100%;height:100%}
+.admin-sidebar{width:240px;background:rgba(0,0,0,.5);border-right:1px solid rgba(var(--rgb1),.15);display:flex;flex-direction:column;padding:1.5rem 1rem}
+.admin-logo{font-size:1.1rem;font-weight:700;color:var(--c1);margin-bottom:1.5rem;display:flex;align-items:center;gap:8px}
+.admin-logo span{font-size:.75rem;background:rgba(var(--rgb4),.3);color:var(--c3);padding:.2rem .5rem;border-radius:6px}
+.admin-nav{display:flex;flex-direction:column;gap:.4rem;flex:1}
+.admin-nav-btn{background:transparent;border:none;color:var(--text-dim);font-family:'Poppins',sans-serif;font-size:.85rem;font-weight:500;padding:.6rem .8rem;border-radius:var(--rsm);cursor:pointer;text-align:left;transition:all .3s;display:flex;align-items:center;gap:8px}
+.admin-nav-btn:hover,.admin-nav-btn.active{background:rgba(var(--rgb1),.12);color:var(--c1)}
+.admin-close-btn{background:rgba(200,80,80,.15);color:#f08080;border:1px solid rgba(200,80,80,.3);border-radius:var(--rsm);padding:.6rem .8rem;font-family:'Poppins',sans-serif;font-size:.82rem;cursor:pointer;margin-top:auto;transition:all .3s}
+.admin-close-btn:hover{background:rgba(200,80,80,.25)}
+.admin-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.admin-topbar{padding:1rem 1.5rem;border-bottom:1px solid rgba(var(--rgb1),.12);display:flex;align-items:center;justify-content:space-between}
+.admin-topbar h2{font-size:1rem;font-weight:600;color:var(--text-bright)}
+.admin-online{font-size:.8rem;color:var(--c1);display:flex;align-items:center;gap:5px}
+.admin-content{flex:1;overflow-y:auto;padding:1.5rem;display:flex;flex-direction:column;gap:1rem}
+.admin-chat-area{display:flex;flex-direction:column;height:100%}
+.admin-chat-msgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:.7rem;margin-bottom:1rem;min-height:0;max-height:calc(100vh - 280px);padding:.5rem}
+.admin-chat-msgs::-webkit-scrollbar{width:4px}
+.admin-chat-msgs::-webkit-scrollbar-thumb{background:rgba(var(--rgb1),.3);border-radius:2px}
+.admin-input-row{display:flex;gap:.7rem}
+.admin-inp{flex:1;background:rgba(var(--rgb1),.08);border:1px solid rgba(var(--rgb1),.2);border-radius:var(--rxl);padding:.65rem 1.1rem;font-family:'Poppins',sans-serif;font-size:.88rem;color:var(--text-bright);outline:none;transition:border-color .3s;cursor:text}
+.admin-inp:focus{border-color:rgba(var(--rgb1),.5)}
+.admin-inp::placeholder{color:var(--text-dim)}
+.admin-send{background:var(--c2);color:white;border:none;width:42px;height:42px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .2s,background .6s}
+.admin-send:hover{transform:scale(1.1)}
+.admin-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.stat-card{background:rgba(var(--rgb1),.08);border:1px solid rgba(var(--rgb1),.15);border-radius:var(--rmd);padding:1.2rem;text-align:center}
+.stat-val{font-size:2rem;font-weight:700;color:var(--c1)}
+.stat-lbl{font-size:.75rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px}
+
+/* ════════════════════════ RESPONSIVE ════════════════════════ */
+@media(max-width:768px){
+  nav{padding:1rem 1rem}
+  .nav-links{display:none}
+  .about-inner{grid-template-columns:1fr}
+  .cgrid{grid-template-columns:repeat(4,1fr)}
+  .fgrid{grid-template-columns:repeat(5,1fr)}
+  .memgrid{grid-template-columns:repeat(4,1fr)}
+  .admin-sidebar{width:56px;overflow:hidden}
+  .admin-logo,.admin-nav-btn span{display:none}
+  .theme-presets{grid-template-columns:repeat(2,1fr)}
+  .color-pickers{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+<div id="cur"></div>
+<div id="cur-ring"></div>
+
+<!-- ══ NAV ══ -->
+<nav>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 2C8 4 4 8 4 13c0 4.4 3.6 8 8 8s8-3.6 8-8c0-4.5-3.5-8.6-8-11z"/><path d="M12 6v14" stroke="rgba(255,255,255,.4)" stroke-width="1.5" fill="none"/></svg>
+    </div>
+    <span class="logo-name">SERENA</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#beneficios">Beneficios</a></li>
+    <li><a href="#sobre">La app</a></li>
+    <li><a href="#experiencia">Juegos</a></li>
+    <li><a href="#chat">Habla con nosotros</a></li>
+    <li><a href="#equipo">Equipo</a></li>
+    <li><button class="nav-theme-btn" onclick="openTheme()">🎨 Personalizar</button></li>
+    <li><a href="#experiencia" class="nav-cta">Comenzar</a></li>
+  </ul>
+</nav>
+
+<!-- ══ HERO ══ -->
+<section class="hero" id="hero">
+  <div class="hero-content">
+    <div class="hero-badge"><span class="bdot"></span> Diseñado para universitarios</div>
+    <h1>Encuentra tu<br><span>calma interior</span><br>hoy mismo</h1>
+    <p>SERENA te acompaña en el camino hacia el equilibrio emocional.<br>Medita, respira y reconecta contigo en medio del mundo universitario.</p>
+    <a href="#experiencia" class="btn-primary">
+      Empieza gratis
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+  </div>
+  <div class="hero-scroll"><span>Descubrir</span><div class="scroll-arr"></div></div>
+</section>
+
+<div class="wave-div"><svg viewBox="0 0 1440 60" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style="height:60px"><path d="M0,30 C360,60 720,0 1080,30 C1260,45 1350,20 1440,30 L1440,60 L0,60 Z" fill="rgba(var(--rgb-dark),.6)"/></svg></div>
+
+<!-- ══ BENEFITS ══ -->
+<section class="benefits" id="beneficios">
+  <div class="container">
+    <div class="benefits-header reveal">
+      <p class="section-label">Lo que sentirás</p>
+      <h2 class="section-title">Cuatro pilares de tu bienestar</h2>
+      <p class="section-sub" style="margin:0 auto">SERENA te guía hacia un estado de bienestar sostenible a través de prácticas simples diseñadas para tu ritmo de vida.</p>
+    </div>
+    <div class="benefits-grid">
+      <article class="bcard reveal" style="transition-delay:.08s"><span class="bicon">🌿</span><h3>Calma</h3><p>Técnicas de respiración y meditación guiada que reducen el cortisol y llevan tu mente a un estado sereno en minutos.</p></article>
+      <article class="bcard reveal" style="transition-delay:.16s"><span class="bicon">⚖️</span><h3>Equilibrio</h3><p>Establece rutinas de bienestar que balancean tus demandas académicas con tu salud mental.</p></article>
+      <article class="bcard reveal" style="transition-delay:.24s"><span class="bicon">✨</span><h3>Confianza</h3><p>Desarrolla una relación más compasiva contigo mismo. Cada sesión refuerza tu autoestima y claridad mental.</p></article>
+      <article class="bcard reveal" style="transition-delay:.32s"><span class="bicon">🛡️</span><h3>Seguridad emocional</h3><p>Aprende a navegar el estrés de exámenes con herramientas probadas de regulación emocional.</p></article>
+    </div>
+  </div>
+</section>
+
+<div class="wave-div"><svg viewBox="0 0 1440 60" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style="height:60px"><path d="M0,20 C480,60 960,0 1440,30 L1440,0 L0,0 Z" fill="rgba(var(--rgb-dark),.6)"/></svg></div>
+
+<!-- ══ ABOUT ══ -->
+<section class="about" id="sobre">
+  <div class="container">
+    <div class="about-inner">
+      <div class="about-visual reveal">
+        <div class="phone">
+          <div class="pbar"></div>
+          <div class="pcircle"><svg width="28" height="28" viewBox="0 0 24 24"><path d="M12 2C8 4 4 8 4 13c0 4.4 3.6 8 8 8s8-3.6 8-8c0-4.5-3.5-8.6-8-11z" fill="white" opacity=".9"/><path d="M12 6v14" stroke="rgba(255,255,255,.4)" stroke-width="1.5" fill="none"/></svg></div>
+          <div class="pline"></div><div class="pline plines"></div><div class="pline"></div><div class="pline plines" style="width:70%"></div><div class="pbtn"></div>
         </div>
-        <span class="logo-name">SERENA</span>
       </div>
-
-      <ul class="nav-links">
-        <li><a href="#beneficios">Beneficios</a></li>
-        <li><a href="#sobre">La app</a></li>
-        <li><a href="#experiencia">Experiencia</a></li>
-        <li><a href="#equipo">Equipo</a></li>
-        <li><a href="#experiencia" class="nav-cta">Comenzar</a></li>
-      </ul>
-    </nav>
-
-    <!-- =========================
-         HERO / PORTADA
-         ========================= -->
-    <section class="hero" id="hero">
-      <div class="hero-content">
-        <div class="hero-badge">
-          <span class="bdot"></span>
-          Diseñado para universitarios
+      <div class="reveal" style="transition-delay:.12s">
+        <p class="section-label">Sobre SERENA</p>
+        <h2 class="section-title">Tu espacio seguro en el mundo digital</h2>
+        <p class="section-sub">SERENA es tu compañera de bienestar mental pensada desde y para la experiencia universitaria: las presiones, el síndrome del impostor y la ansiedad ante los exámenes.</p>
+        <div class="feats">
+          <div class="feat"><div class="fchk">✓</div><span>Meditaciones de 3 a 15 minutos adaptadas a tus tiempos</span></div>
+          <div class="feat"><div class="fchk">✓</div><span>Diario emocional inteligente y seguimiento de progreso</span></div>
+          <div class="feat"><div class="fchk">✓</div><span>Técnicas SOS para momentos de alta ansiedad</span></div>
+          <div class="feat"><div class="fchk">✓</div><span>Comunidad de universitarios que se apoyan mutuamente</span></div>
         </div>
-
-        <h1>
-          Encuentra tu<br />
-          <span>calma interior</span><br />
-          hoy mismo
-        </h1>
-
-        <p>
-          SERENA te acompaña en el camino hacia el equilibrio emocional.<br />
-          Medita, respira y reconecta contigo en medio del mundo universitario.
-        </p>
-
-        <a href="#experiencia" class="btn-primary">
-          <span>Empieza gratis</span>
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-            aria-hidden="true"
-          >
-            <path d="M5 12h14M12 5l7 7-7 7" />
-          </svg>
-        </a>
       </div>
+    </div>
+  </div>
+</section>
 
-      <div class="hero-scroll">
-        <span>Descubrir</span>
-        <div class="scroll-arr"></div>
-      </div>
-    </section>
-
-    <!-- Separador visual entre secciones -->
-    <div class="wave-div">
-      <svg
-        class="wave-svg"
-        viewBox="0 0 1440 60"
-        xmlns="http://www.w3.org/2000/svg"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-      >
-        <path
-          d="M0,30 C360,60 720,0 1080,30 C1260,45 1350,20 1440,30 L1440,60 L0,60 Z"
-          fill="rgba(13,31,20,.6)"
-        />
-      </svg>
+<!-- ══ GAMES ══ -->
+<section class="games" id="experiencia">
+  <div class="container">
+    <div class="games-header reveal">
+      <p class="section-label">Experiencia interactiva</p>
+      <h2 class="section-title">Juega y relájate con SERENA</h2>
+      <p class="section-sub" style="margin:0 auto">7 experiencias diseñadas para llevarte a un estado de calma. Cada una entrena tu atención y te regala un momento de paz.</p>
+    </div>
+    <div class="gtabs reveal" style="transition-delay:.1s">
+      <button class="tbtn active" onclick="switchTab('breath')">🌬️ Respiración</button>
+      <button class="tbtn" onclick="switchTab('click')">🌸 Toca calma</button>
+      <button class="tbtn" onclick="switchTab('find')">🔍 Encuentra</button>
+      <button class="tbtn" onclick="switchTab('bubble')">🫧 Burbujas</button>
+      <button class="tbtn" onclick="switchTab('memory')">🧠 Memoria</button>
+      <button class="tbtn" onclick="switchTab('star')">⭐ Estrellas</button>
+      <button class="tbtn" onclick="switchTab('color')">🎨 Colores</button>
     </div>
 
-    <!-- =========================
-         SECCIÓN DE BENEFICIOS
-         ========================= -->
-    <section class="benefits" id="beneficios">
-      <div class="container">
-        <div class="benefits-header reveal">
-          <p class="section-label">Lo que sentirás</p>
-          <h2 class="section-title">Cuatro pilares de tu bienestar</h2>
-          <p class="section-sub section-sub--centered">
-            SERENA te guía hacia un estado de bienestar sostenible a través de prácticas
-            simples diseñadas para tu ritmo de vida.
-          </p>
+    <!-- BREATH -->
+    <div class="gpanel active" id="game-breath">
+      <div class="garea">
+        <div class="blabel" id="blabel">Toca el círculo para comenzar</div>
+        <div class="bcont" tabindex="0" onclick="handleBreath()" onkeydown="if(event.key==='Enter')handleBreath()">
+          <div class="bouter" id="bouter"></div><div class="bring" id="bring"></div><div class="binner" id="binner">Toca</div>
         </div>
-
-        <div class="benefits-grid">
-          <article class="bcard reveal reveal-delay-1">
-            <span class="bicon">🌿</span>
-            <h3>Calma</h3>
-            <p>
-              Técnicas de respiración y meditación guiada que reducen el cortisol y llevan
-              tu mente a un estado sereno en minutos.
-            </p>
-          </article>
-
-          <article class="bcard reveal reveal-delay-2">
-            <span class="bicon">⚖️</span>
-            <h3>Equilibrio</h3>
-            <p>
-              Establece rutinas de bienestar que balancean tus demandas académicas con tu
-              salud mental.
-            </p>
-          </article>
-
-          <article class="bcard reveal reveal-delay-3">
-            <span class="bicon">✨</span>
-            <h3>Confianza</h3>
-            <p>
-              Desarrolla una relación más compasiva contigo mismo. Cada sesión refuerza tu
-              autoestima y claridad mental.
-            </p>
-          </article>
-
-          <article class="bcard reveal reveal-delay-4">
-            <span class="bicon">🛡️</span>
-            <h3>Seguridad emocional</h3>
-            <p>
-              Aprende a navegar el estrés de exámenes con herramientas probadas de
-              regulación emocional.
-            </p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- Separador visual entre secciones -->
-    <div class="wave-div">
-      <svg
-        class="wave-svg"
-        viewBox="0 0 1440 60"
-        xmlns="http://www.w3.org/2000/svg"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-      >
-        <path
-          d="M0,20 C480,60 960,0 1440,30 L1440,0 L0,0 Z"
-          fill="rgba(13,31,20,.6)"
-        />
-      </svg>
-    </div>
-
-    <!-- =========================
-         SECCIÓN SOBRE LA APP
-         ========================= -->
-    <section class="about" id="sobre">
-      <div class="container">
-        <div class="about-inner">
-          <div class="about-visual reveal">
-            <div class="phone">
-              <div class="pbar"></div>
-
-              <div class="pcircle">
-                <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true">
-                  <path
-                    d="M12 2C8 4 4 8 4 13c0 4.4 3.6 8 8 8s8-3.6 8-8c0-4.5-3.5-8.6-8-11z"
-                    fill="white"
-                    opacity=".9"
-                  />
-                  <path
-                    d="M12 6v14"
-                    stroke="rgba(255,255,255,.4)"
-                    stroke-width="1.5"
-                    fill="none"
-                  />
-                </svg>
-              </div>
-
-              <div class="pline"></div>
-              <div class="pline plines"></div>
-              <div class="pline"></div>
-              <div class="pline pline-wide"></div>
-              <div class="pbtn"></div>
-            </div>
-          </div>
-
-          <div class="reveal reveal-delay-about-text">
-            <p class="section-label">Sobre SERENA</p>
-            <h2 class="section-title">Tu espacio seguro en el mundo digital</h2>
-            <p class="section-sub">
-              SERENA es tu compañera de bienestar mental pensada desde y para la experiencia
-              universitaria: las presiones, el síndrome del impostor y la ansiedad ante los
-              exámenes.
-            </p>
-
-            <div class="feats">
-              <div class="feat">
-                <div class="fchk">✓</div>
-                <span>Meditaciones de 3 a 15 minutos adaptadas a tus tiempos</span>
-              </div>
-
-              <div class="feat">
-                <div class="fchk">✓</div>
-                <span>Diario emocional inteligente y seguimiento de progreso</span>
-              </div>
-
-              <div class="feat">
-                <div class="fchk">✓</div>
-                <span>Técnicas SOS para momentos de alta ansiedad</span>
-              </div>
-
-              <div class="feat">
-                <div class="fchk">✓</div>
-                <span>Comunidad de universitarios que se apoyan mutuamente</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- =========================
-         EXPERIENCIA INTERACTIVA
-         ========================= -->
-    <section class="games" id="experiencia">
-      <div class="container">
-        <div class="games-header reveal">
-          <p class="section-label">Experiencia interactiva</p>
-          <h2 class="section-title">Prueba SERENA ahora mismo</h2>
-          <p class="section-sub section-sub--centered">
-            Explora estas experiencias diseñadas para llevarte a un estado de calma en menos
-            de 3 minutos.
-          </p>
-        </div>
-
-        <!-- Botones para cambiar entre minijuegos -->
-        <div class="gtabs reveal reveal-delay-about-text">
-          <button class="tbtn active" data-tab="breath" type="button">
-            🌬️ Respiración guiada
-          </button>
-          <button class="tbtn" data-tab="click" type="button">🌸 Toca la calma</button>
-          <button class="tbtn" data-tab="find" type="button">🔍 Encuentra la paz</button>
-        </div>
-
-        <!-- Juego 1: respiración guiada -->
-        <div class="gpanel active" id="game-breath">
-          <div class="barea">
-            <div class="blabel" id="blabel">Toca el círculo para comenzar</div>
-
-            <div
-              class="bcont"
-              id="breathTrigger"
-              tabindex="0"
-              role="button"
-              aria-label="Iniciar ejercicio de respiración"
-            >
-              <div class="bouter" id="bouter"></div>
-              <div class="bring" id="bring"></div>
-              <div class="binner" id="binner">Toca</div>
-            </div>
-
-            <div class="bcnt" id="bcnt">0 / 4</div>
-
-            <div class="bprog">
-              <div class="bfill" id="bfill"></div>
-            </div>
-
-            <button class="gbtn" id="breset" type="button">🔄 Practicar de nuevo</button>
-          </div>
-        </div>
-
-        <!-- Juego 2: identificar elementos calmantes -->
-        <div class="gpanel" id="game-click">
-          <div class="carea">
-            <p class="game-helper-text">
-              Toca todos los elementos con brillo verde suave. Evita los demás.
-            </p>
-
-            <div class="csrow">
-              <div>
-                <div class="csv" id="cscore">0</div>
-                <div class="csl">encontrados</div>
-              </div>
-              <div>
-                <div class="csv" id="ctarget">—</div>
-                <div class="csl">objetivo</div>
-              </div>
-              <div>
-                <div class="csv" id="cerrors">0</div>
-                <div class="csl">errores</div>
-              </div>
-            </div>
-
-            <div class="cgrid" id="cgrid"></div>
-
-            <button class="gbtn" id="clickRestart" type="button">🌱 Nueva ronda</button>
-          </div>
-        </div>
-
-        <!-- Juego 3: encontrar elementos naturales -->
-        <div class="gpanel" id="game-find">
-          <div class="farea">
-            <p class="game-helper-text game-helper-text--find">
-              Encuentra todos los elementos de la naturaleza escondidos en la cuadrícula
-            </p>
-
-            <div class="ftarget">
-              <span class="ftarget-emoji" id="femoji">🌿</span>
-              <span>Busca este elemento</span>
-            </div>
-
-            <div class="fdots" id="fdots"></div>
-            <div class="fgrid" id="fgrid"></div>
-
-            <button class="gbtn" id="findRestart" type="button">🔍 Nueva búsqueda</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- =========================
-         EQUIPO CREADOR
-         ========================= -->
-    <section class="team" id="equipo">
-      <div class="container">
-        <div class="team-header reveal">
-          <p class="section-label">Quiénes somos</p>
-          <h2 class="section-title">Los creadores de SERENA</h2>
-          <p class="section-sub section-sub--centered">
-            Dos ingenieros que decidieron que la tecnología debía estar al servicio del
-            bienestar estudiantil.
-          </p>
-        </div>
-
-        <div class="tgrid">
-          <div class="tcard reveal reveal-delay-1">
-            <div class="tavatar">RS</div>
-            <div class="tname">Rafael Sibaja</div>
-            <div class="trole">Ingeniero de Sistemas</div>
-            <div class="tuni">
-              Universidad Cooperativa de Colombia<br />
-              Facultad de Ingeniería
-            </div>
-            <span class="tbadge">💻 Co-fundador & Dev</span>
-          </div>
-
-          <div class="tcard reveal reveal-delay-2">
-            <div class="tavatar">AS</div>
-            <div class="tname">Ángel Sepúlveda</div>
-            <div class="trole">Ingeniero de Sistemas</div>
-            <div class="tuni">
-              Universidad Cooperativa de Colombia<br />
-              Facultad de Ingeniería
-            </div>
-            <span class="tbadge">🎨 Co-fundador & UX</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- =========================
-         PIE DE PÁGINA
-         ========================= -->
-    <footer>
-      <span class="flogo">SERENA</span>
-      <p>Tu calma, tu equilibrio, tu bienestar</p>
-      <p>Hecho con ❤️ por Rafael Sibaja & Ángel Sepúlveda</p>
-      <p>Ingenieros de Sistemas — Universidad Cooperativa de Colombia</p>
-      <p class="fsmall">© 2025 SERENA App — Todos los derechos reservados</p>
-    </footer>
-
-    <!-- =========================
-         MODAL / MENSAJE FINAL
-         ========================= -->
-    <div class="woverlay" id="wov">
-      <div class="wcard">
-        <span class="wemoji" id="wemoji">🌿</span>
-        <h2 class="wtitle" id="wtitle">¡Excelente!</h2>
-        <p class="wmsg" id="wmsg">Lo estás haciendo muy bien</p>
-        <button class="wclose" id="wclose" type="button">Continuar</button>
+        <div class="bcnt" id="bcnt">0 / 4</div>
+        <div class="bprog"><div class="bfill" id="bfill" style="width:0%"></div></div>
+        <button class="gbtn" id="breset" style="display:none" onclick="resetBreath()">🔄 Practicar de nuevo</button>
       </div>
     </div>
 
-    <!-- Script principal del proyecto -->
-    <script src="js/script.js"></script>
-  </body>
+    <!-- CLICK CALM -->
+    <div class="gpanel" id="game-click">
+      <div class="garea">
+        <p style="font-size:.88rem;color:var(--text-dim);margin-bottom:1.2rem;font-weight:300">Toca los elementos con brillo. Evita los demás.</p>
+        <div class="csrow"><div><div class="csv" id="cscore">0</div><div class="csl">encontrados</div></div><div><div class="csv" id="ctarget">—</div><div class="csl">objetivo</div></div><div><div class="csv" id="cerrors">0</div><div class="csl">errores</div></div></div>
+        <div class="cgrid" id="cgrid"></div>
+        <button class="gbtn" onclick="initClick()">🌱 Nueva ronda</button>
+      </div>
+    </div>
+
+    <!-- FIND -->
+    <div class="gpanel" id="game-find">
+      <div class="garea">
+        <p style="font-size:.88rem;color:var(--text-dim);margin-bottom:1.2rem;font-weight:300">Encuentra todos los elementos de la naturaleza en orden</p>
+        <div class="ftarget"><span style="font-size:1.3rem" id="femoji">🌿</span><span>Busca este elemento</span></div>
+        <div class="fdots" id="fdots"></div>
+        <div class="fgrid" id="fgrid"></div>
+        <button class="gbtn" onclick="initFind()">🔍 Nueva búsqueda</button>
+      </div>
+    </div>
+
+    <!-- BUBBLE POP -->
+    <div class="gpanel" id="game-bubble">
+      <div class="garea">
+        <p style="font-size:.88rem;color:var(--text-dim);margin-bottom:.8rem;font-weight:300">Revienta las burbujas antes de que escapen. ¡Toca rápido!</p>
+        <div class="csrow"><div><div class="csv" id="bscore">0</div><div class="csl">reventadas</div></div><div><div class="csv" id="bmiss">0</div><div class="csl">escapadas</div></div></div>
+        <div class="bpgame" id="bpgame"></div>
+        <button class="gbtn" onclick="initBubble()">🫧 Nueva ronda</button>
+      </div>
+    </div>
+
+    <!-- MEMORY -->
+    <div class="gpanel" id="game-memory">
+      <div class="garea">
+        <p style="font-size:.88rem;color:var(--text-dim);margin-bottom:.8rem;font-weight:300">Encuentra los pares iguales. ¡Entrena tu memoria!</p>
+        <div class="csrow"><div><div class="csv" id="mscore">0</div><div class="csl">pares</div></div><div><div class="csv" id="mmoves">0</div><div class="csl">intentos</div></div></div>
+        <div class="memgrid" id="memgrid"></div>
+        <button class="gbtn" onclick="initMemory()">🧠 Nueva partida</button>
+      </div>
+    </div>
+
+    <!-- STAR CATCH -->
+    <div class="gpanel" id="game-star">
+      <div class="garea">
+        <p style="font-size:.88rem;color:var(--text-dim);margin-bottom:.8rem;font-weight:300">Atrapa las estrellas ✨ — deja caer los nubarrones ☁️</p>
+        <div class="star-hud"><div class="star-stat"><div class="star-val" id="sscore">0</div><div class="star-lbl">estrellas</div></div><div class="star-stat"><div class="star-val" id="slives">3</div><div class="star-lbl">vidas ❤️</div></div></div>
+        <div class="star-bar-wrap"><div class="star-bar" id="sbar" style="width:100%"></div></div>
+        <div class="stargame" id="stargame"></div>
+        <button class="gbtn" onclick="initStar()">⭐ Nuevo juego</button>
+      </div>
+    </div>
+
+    <!-- COLOR MATCH -->
+    <div class="gpanel" id="game-color">
+      <div class="garea">
+        <p style="font-size:.88rem;color:var(--text-dim);margin-bottom:.8rem;font-weight:300">Toca el emoji que corresponde con la emoción indicada</p>
+        <div class="cs-progress" id="csprog">Ronda 1 de 8</div>
+        <div class="cs-prompt" id="csprompt">¿Cuál transmite calma?</div>
+        <div class="cs-target" id="cstarget">😌</div>
+        <div class="cs-options" id="csopts"></div>
+        <div class="csrow" style="margin-top:1.2rem"><div><div class="csv" id="cgscore">0</div><div class="csl">correctas</div></div><div><div class="csv" id="cgerr">0</div><div class="csl">errores</div></div></div>
+        <button class="gbtn" onclick="initColorGame()">🎨 Nueva ronda</button>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══ CHAT ══ -->
+<section class="chat-section" id="chat">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:.5rem" class="reveal">
+      <p class="section-label">Habla con nosotros</p>
+      <h2 class="section-title">Estamos aquí para escucharte</h2>
+      <p class="section-sub">Escríbenos en cualquier momento. Una persona del equipo SERENA estará contigo para orientarte y acompañarte.</p>
+    </div>
+    <div class="chat-box reveal" style="transition-delay:.12s">
+      <div class="chat-header">
+        <div class="chat-avatar">🌿</div>
+        <div class="chat-info">
+          <div class="chat-name">Equipo SERENA</div>
+          <div class="chat-status"><span class="status-dot"></span> En línea — respondemos pronto</div>
+        </div>
+      </div>
+      <div class="chat-nickname-row">
+        <input class="chat-nick-inp" id="nickInp" type="text" placeholder="Tu nombre o apodo (opcional)…" maxlength="30">
+        <button class="chat-nick-btn" onclick="setNick()">Guardar</button>
+      </div>
+      <div class="chat-msgs" id="chatMsgs">
+        <div class="msg system">¡Bienvenido/a! 🌿 Escríbenos con confianza.</div>
+      </div>
+      <div class="chat-typing" id="chatTyping"></div>
+      <div class="chat-input-row">
+        <input class="chat-input" id="chatInp" type="text" placeholder="Escribe tu mensaje…" maxlength="300" onkeydown="if(event.key==='Enter')sendChat()">
+        <button class="chat-send" onclick="sendChat()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M22 2L11 13M22 2L15 22 11 13 2 9 22 2z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ TEAM ══ -->
+<section class="team" id="equipo">
+  <div class="container">
+    <div class="team-header reveal">
+      <p class="section-label">Quiénes somos</p>
+      <h2 class="section-title">Los creadores de SERENA</h2>
+      <p class="section-sub" style="margin:0 auto">Dos ingenieros que decidieron que la tecnología debía estar al servicio del bienestar estudiantil.</p>
+    </div>
+    <div class="tgrid">
+      <div class="tcard reveal" style="transition-delay:.08s"><div class="tavatar">RS</div><div class="tname">Rafael Sibaja</div><div class="trole">Ingeniero de Sistemas</div><div class="tuni">Universidad Cooperativa de Colombia<br>Facultad de Ingeniería</div><span class="tbadge">💻 Co-fundador &amp; Dev</span></div>
+      <div class="tcard reveal" style="transition-delay:.18s"><div class="tavatar">AS</div><div class="tname">Ángel Sepúlveda</div><div class="trole">Ingeniero de Sistemas</div><div class="tuni">Universidad Cooperativa de Colombia<br>Facultad de Ingeniería</div><span class="tbadge">🎨 Co-fundador &amp; UX</span></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span class="flogo">SERENA</span>
+  <p>Tu calma, tu equilibrio, tu bienestar</p>
+  <p>Hecho con ❤️ por Rafael Sibaja &amp; Ángel Sepúlveda</p>
+  <p>Ingenieros de Sistemas — Universidad Cooperativa de Colombia</p>
+  <p class="fsmall">© 2025 SERENA App — Todos los derechos reservados</p>
+</footer>
+
+<!-- ══ WIN ══ -->
+<div class="woverlay" id="wov"><div class="wcard"><span class="wemoji" id="wemoji">🌿</span><h2 class="wtitle" id="wtitle">¡Excelente!</h2><p class="wmsg" id="wmsg">Lo estás haciendo muy bien</p><button class="wclose" onclick="closeWin()">Continuar</button></div></div>
+
+<!-- ══ THEME PICKER ══ -->
+<div class="theme-overlay" id="themeOv">
+  <div class="theme-panel">
+    <h2>🎨 Personaliza SERENA</h2>
+    <p>Elige un tema preestablecido o crea el tuyo propio</p>
+    <div class="theme-presets" id="presets"></div>
+    <div class="theme-custom">
+      <h3>Crea tu propio tema</h3>
+      <div class="color-pickers">
+        <div class="cp-row"><label>Color primario</label><input type="color" id="cp1" value="#A8D5BA" oninput="applyCustom()"></div>
+        <div class="cp-row"><label>Color secundario</label><input type="color" id="cp2" value="#4A7C59" oninput="applyCustom()"></div>
+        <div class="cp-row"><label>Color de apoyo</label><input type="color" id="cp3" value="#A7C7E7" oninput="applyCustom()"></div>
+        <div class="cp-row"><label>Botones / CTA</label><input type="color" id="cp4" value="#2E5EAA" oninput="applyCustom()"></div>
+      </div>
+    </div>
+    <button class="theme-close" onclick="closeTheme()">✓ Aplicar y cerrar</button>
+  </div>
+</div>
+
+<!-- ══ ADMIN PANEL ══ -->
+<div class="admin-overlay" id="adminOv">
+  <div class="admin-layout">
+    <div class="admin-sidebar">
+      <div class="admin-logo">🌿 SERENA <span>ADMIN</span></div>
+      <div class="admin-nav">
+        <button class="admin-nav-btn active" onclick="adminTab('chat')">💬 <span>Chat en vivo</span></button>
+        <button class="admin-nav-btn" onclick="adminTab('stats')">📊 <span>Estadísticas</span></button>
+      </div>
+      <button class="admin-close-btn" onclick="closeAdmin()">✕ Salir del panel</button>
+    </div>
+    <div class="admin-main">
+      <div class="admin-topbar">
+        <h2>Panel de Administración — SERENA</h2>
+        <div class="admin-online"><span class="status-dot"></span> Sistema activo</div>
+      </div>
+      <div class="admin-content">
+        <!-- Chat Tab -->
+        <div id="adminChat" class="admin-chat-area">
+          <div class="admin-chat-msgs" id="adminMsgs"></div>
+          <div class="admin-input-row">
+            <input class="admin-inp" id="adminInp" type="text" placeholder="Responde como SERENA…" maxlength="400" onkeydown="if(event.key==='Enter')adminSend()">
+            <button class="admin-send" onclick="adminSend()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M22 2L11 13M22 2L15 22 11 13 2 9 22 2z"/></svg>
+            </button>
+          </div>
+        </div>
+        <!-- Stats Tab -->
+        <div id="adminStats" style="display:none">
+          <div class="admin-stats">
+            <div class="stat-card"><div class="stat-val" id="statMsgs">0</div><div class="stat-lbl">Mensajes totales</div></div>
+            <div class="stat-card"><div class="stat-val" id="statUsers">0</div><div class="stat-lbl">Usuarios activos</div></div>
+            <div class="stat-card"><div class="stat-val" id="statAdmin">0</div><div class="stat-lbl">Respuestas admin</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   THEME SYSTEM
+══════════════════════════════════════════════════════ */
+const themes = [
+  { name:'Bosque 🌿', c1:'#A8D5BA', c2:'#4A7C59', c3:'#A7C7E7', c4:'#2E5EAA', dark:'13,31,20' },
+  { name:'Océano 🌊', c1:'#7ECFED', c2:'#1a6e8a', c3:'#A0D4E8', c4:'#1565a0', dark:'8,20,32' },
+  { name:'Lavanda 💜', c1:'#C9B8E8', c2:'#6B4FA0', c3:'#E0C8F8', c4:'#4a2d7a', dark:'18,12,30' },
+  { name:'Aurora 🌅', c1:'#F5C5A3', c2:'#c0622a', c3:'#F0A090', c4:'#8b2e10', dark:'30,14,8' },
+  { name:'Rosa 🌸', c1:'#F2B5C8', c2:'#a04060', c3:'#F5D0DC', c4:'#803050', dark:'28,10,18' },
+  { name:'Menta 🍃', c1:'#A0E8C0', c2:'#208050', c3:'#B0F0D0', c4:'#106040', dark:'8,22,14' }
+];
+let activeTheme = 0;
+
+function hexToRgb(h){const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`${r},${g},${b}`}
+
+function applyTheme(t){
+  const r=document.documentElement.style;
+  r.setProperty('--c1',t.c1); r.setProperty('--c2',t.c2);
+  r.setProperty('--c3',t.c3); r.setProperty('--c4',t.c4);
+  r.setProperty('--rgb1',hexToRgb(t.c1)); r.setProperty('--rgb2',hexToRgb(t.c2));
+  r.setProperty('--rgb3',hexToRgb(t.c3)); r.setProperty('--rgb4',hexToRgb(t.c4));
+  r.setProperty('--rgb-dark',t.dark||'13,31,20');
+  // Update canvas orb colors
+  if(window.orbColors) window.orbColors = [hexToRgb(t.c1).split(',').map(Number), hexToRgb(t.c2).split(',').map(Number), hexToRgb(t.c3).split(',').map(Number), hexToRgb(t.c4).split(',').map(Number), [150,200,170]];
+}
+
+function buildPresets(){
+  const c=document.getElementById('presets');
+  themes.forEach((t,i)=>{
+    const btn=document.createElement('div');btn.className='preset-btn'+(i===0?' active':'');
+    btn.onclick=()=>{activeTheme=i;applyTheme(t);document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');};
+    btn.innerHTML=`<div class="preset-swatch"><div style="background:${t.c1}"></div><div style="background:${t.c2}"></div><div style="background:${t.c3}"></div><div style="background:${t.c4}"></div></div><div class="preset-label">${t.name}</div>`;
+    c.appendChild(btn);
+  });
+}
+buildPresets();
+applyTheme(themes[0]);
+
+function applyCustom(){
+  const t={c1:document.getElementById('cp1').value,c2:document.getElementById('cp2').value,c3:document.getElementById('cp3').value,c4:document.getElementById('cp4').value,dark:'13,31,20'};
+  applyTheme(t);
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+}
+function openTheme(){document.getElementById('themeOv').classList.add('show')}
+function closeTheme(){document.getElementById('themeOv').classList.remove('show')}
+
+/* ══════════════════════════════════════════════════════
+   CANVAS BACKGROUND
+══════════════════════════════════════════════════════ */
+const canvas=document.getElementById('bg');const ctx=canvas.getContext('2d');
+let W,H,mouse={x:-999,y:-999};
+const particles=[],stars=[],ripples=[],orbs=[];
+
+window.orbColors=[[168,213,186],[167,199,231],[74,124,89],[46,94,170],[130,200,160],[100,180,210]];
+
+function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight}
+resize();window.addEventListener('resize',resize);
+
+for(let i=0;i<130;i++)stars.push({x:Math.random()*2000,y:Math.random()*1400,r:.3+Math.random()*1.3,a:Math.random(),speed:.003+Math.random()*.009,phase:Math.random()*Math.PI*2});
+
+for(let i=0;i<7;i++){const c=window.orbColors[i%window.orbColors.length];orbs.push({x:Math.random()*1600,y:Math.random()*1000,r:130+Math.random()*210,vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.18,ci:i%window.orbColors.length,alpha:.04+Math.random()*.07,phase:Math.random()*Math.PI*2})}
+
+function spawnP(x,y,vx,vy){particles.push({x:x||Math.random()*W,y:y||Math.random()*H,vx:vx!==undefined?vx:(Math.random()-.5)*.4,vy:vy!==undefined?vy:-.2-Math.random()*.5,r:.7+Math.random()*2,life:1,decay:.003+Math.random()*.004,ci:Math.floor(Math.random()*2)})}
+for(let i=0;i<90;i++)spawnP();
+
+let T=0;
+function draw(){
+  T+=.007;
+  const oc=window.orbColors;
+  const dark='rgba('+oc[2][0]*0.08+','+oc[2][1]*0.15+','+oc[2][2]*0.08+',1)';
+  const base=`hsl(${138+Math.sin(T*.28)*14},45%,5%)`;
+  const grad=ctx.createLinearGradient(0,0,W,H);
+  grad.addColorStop(0,`hsl(${138+Math.sin(T*.28)*14},45%,5%)`);
+  grad.addColorStop(.5,`hsl(${165+Math.cos(T*.2)*18},40%,7%)`);
+  grad.addColorStop(1,`hsl(${205+Math.cos(T*.19)*16},42%,6%)`);
+  ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
+
+  for(let w=0;w<5;w++){
+    ctx.beginPath();
+    const wY=H*(.15+w*.16)+Math.sin(T*.35+w)*45;
+    ctx.moveTo(0,wY);
+    for(let x=0;x<=W;x+=6){const y=wY+Math.sin(x*.005+T*(.45+w*.14)+w)*(28+w*16)+Math.cos(x*.0025+T*.28+w*1.3)*(18+w*9);ctx.lineTo(x,y);}
+    ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
+    const c1=oc[w%2===0?0:2];const wA=.022+w*.01;
+    const wa=ctx.createLinearGradient(0,wY-70,0,wY+90);
+    wa.addColorStop(0,`rgba(${c1[0]},${c1[1]},${c1[2]},${wA})`);wa.addColorStop(1,`rgba(${c1[0]},${c1[1]},${c1[2]},0)`);
+    ctx.fillStyle=wa;ctx.fill();
+  }
+
+  orbs.forEach(o=>{
+    o.x+=o.vx;o.y+=o.vy;o.phase+=.004;
+    if(o.x<-o.r)o.x=W+o.r;if(o.x>W+o.r)o.x=-o.r;
+    if(o.y<-o.r)o.y=H+o.r;if(o.y>H+o.r)o.y=-o.r;
+    const c=oc[o.ci%oc.length];const pulse=o.alpha*(1+Math.sin(o.phase)*.35);
+    const g=ctx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.r);
+    g.addColorStop(0,`rgba(${c[0]},${c[1]},${c[2]},${pulse})`);g.addColorStop(1,`rgba(${c[0]},${c[1]},${c[2]},0)`);
+    ctx.beginPath();ctx.arc(o.x,o.y,o.r,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+  });
+
+  if(mouse.x>0){const mg=ctx.createRadialGradient(mouse.x,mouse.y,0,mouse.x,mouse.y,150);const mc=oc[0];mg.addColorStop(0,`rgba(${mc[0]},${mc[1]},${mc[2]},.13)`);mg.addColorStop(1,`rgba(${mc[0]},${mc[1]},${mc[2]},0)`);ctx.beginPath();ctx.arc(mouse.x,mouse.y,150,0,Math.PI*2);ctx.fillStyle=mg;ctx.fill();}
+
+  stars.forEach(s=>{s.phase+=s.speed;const al=(.25+Math.sin(s.phase)*.45)*s.a;ctx.beginPath();ctx.arc(s.x%W,s.y%H,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(200,237,220,${al})`;ctx.fill();});
+
+  for(let i=ripples.length-1;i>=0;i--){const rp=ripples[i];rp.r+=rp.speed;const a=rp.alpha*(1-rp.r/rp.maxR);if(a<=0||rp.r>=rp.maxR){ripples.splice(i,1);continue;}const rc=oc[rp.ci];ctx.beginPath();ctx.arc(rp.rx,rp.ry,rp.r,0,Math.PI*2);ctx.strokeStyle=`rgba(${rc[0]},${rc[1]},${rc[2]},${a})`;ctx.lineWidth=1.8;ctx.stroke();}
+
+  for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.x+=p.vx+Math.sin(T+i*.4)*.18;p.y+=p.vy;p.life-=p.decay;if(p.life<=0){particles.splice(i,1);spawnP();continue;}const pc=oc[p.ci%oc.length];ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(${pc[0]},${pc[1]},${pc[2]},${p.life*.65})`;ctx.fill();}
+
+  const maxP=Math.min(particles.length,40);
+  for(let i=0;i<maxP;i++){for(let j=i+1;j<maxP;j++){const dx=particles[i].x-particles[j].x,dy=particles[i].y-particles[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<80){const a=(1-d/80)*.05;const lc=oc[0];ctx.beginPath();ctx.moveTo(particles[i].x,particles[i].y);ctx.lineTo(particles[j].x,particles[j].y);ctx.strokeStyle=`rgba(${lc[0]},${lc[1]},${lc[2]},${a})`;ctx.lineWidth=.5;ctx.stroke();}}}
+  requestAnimationFrame(draw);
+}
+draw();
+
+/* ══════════════════════════════════════════════════════
+   CURSOR
+══════════════════════════════════════════════════════ */
+let mx=0,my=0,rx=0,ry=0;
+const curEl=document.getElementById('cur'),ringEl=document.getElementById('cur-ring');
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;curEl.style.left=mx+'px';curEl.style.top=my+'px';spawnTrail(mx,my);});
+(function loop(){rx+=(mx-rx)*.11;ry+=(my-ry)*.11;ringEl.style.left=rx+'px';ringEl.style.top=ry+'px';requestAnimationFrame(loop);})();
+document.addEventListener('mousedown',()=>{curEl.style.transform='translate(-50%,-50%) scale(.4)';ringEl.style.width='52px';ringEl.style.height='52px';});
+document.addEventListener('mouseup',()=>{curEl.style.transform='translate(-50%,-50%) scale(1)';ringEl.style.width='34px';ringEl.style.height='34px';});
+
+let trailT=0;
+function spawnTrail(x,y){const now=Date.now();if(now-trailT<28)return;trailT=now;const d=document.createElement('div');d.className='trail';const s=2.5+Math.random()*5;d.style.cssText=`left:${x}px;top:${y}px;width:${s}px;height:${s}px;background:rgba(${Math.random()>.5?'167,199,231':'168,213,186'},.65)`;document.body.appendChild(d);setTimeout(()=>d.remove(),1200);}
+
+/* ══════════════════════════════════════════════════════
+   CLICK EFFECTS (no cooldown — instant per click)
+══════════════════════════════════════════════════════ */
+const msgs=['"La calma no es la ausencia de caos,\nes encontrar paz dentro de él."','"Cada respiro es una nueva oportunidad."','"Eres más fuerte de lo que crees."','"El autocuidado no es egoísmo."','"Tu mente merece descanso."','"Pequeñas pausas, grandes transformaciones."','"Hoy bastó con intentarlo."','"La ansiedad miente. Tú estás bien."','"Fluye como el agua."','"Estás en el camino correcto."','"La perfección es un mito. El progreso es real."','"Respira. Este momento también pasará."','"Mereces paz con la misma intensidad\nque mereces el éxito."','"Tu presencia impacta más\nde lo que crees."'];
+let msgIdx=0;
+
+const BLOCKED_SELECTORS=['button','a','input','[role="tab"]','.citem','.fitem','.memcard','.bubble','.star-obj','.cs-opt','.chat-send','.admin-send'];
+
+function isClickable(el){return BLOCKED_SELECTORS.some(s=>el.closest(s))}
+
+function spawnMsg(x,y){
+  const el=document.createElement('div');el.className='moti';
+  el.textContent=msgs[msgIdx%msgs.length];msgIdx++;
+  const pw=Math.min(270,window.innerWidth-40);
+  const px=Math.min(Math.max(x-pw/2,14),window.innerWidth-pw-14);
+  const py=Math.max(y-80,76);
+  el.style.left=px+'px';el.style.top=py+'px';el.style.width=pw+'px';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),6500);
+}
+
+document.addEventListener('click',e=>{
+  if(isClickable(e.target))return;
+  for(let i=0;i<3;i++)ripples.push({rx:e.clientX,ry:e.clientY,r:0,maxR:100+i*60,speed:1.6+i*1.3,alpha:.5-i*.12,ci:i%2});
+  for(let k=0;k<12;k++){const a=(Math.PI*2/12)*k;spawnP(e.clientX,e.clientY,Math.cos(a)*(1+Math.random()*2.2),Math.sin(a)*(1+Math.random()*2.2));}
+  spawnMsg(e.clientX,e.clientY);
+});
+
+window.addEventListener('scroll',()=>{if(Math.random()>.65)spawnMsg(100+Math.random()*(window.innerWidth-250),80+Math.random()*(window.innerHeight-200));},{passive:true});
+setInterval(()=>spawnMsg(80+Math.random()*(window.innerWidth-200),80+Math.random()*(window.innerHeight-220)),16000);
+
+/* ══════════════════════════════════════════════════════
+   REVEAL
+══════════════════════════════════════════════════════ */
+const obs=new IntersectionObserver(e=>e.forEach(en=>{if(en.isIntersecting)en.target.classList.add('on');}),{threshold:.08});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+/* ══════════════════════════════════════════════════════
+   WIN
+══════════════════════════════════════════════════════ */
+const wins=[{e:'🌿',t:'¡Lo estás haciendo muy bien!',m:'Cada respiro es un pequeño acto de amor hacia ti mismo.'},{e:'✨',t:'Respira, todo está en calma',m:'Has encontrado tu espacio de paz. Llévalo contigo hoy.'},{e:'🌸',t:'¡Qué mente tan serena!',m:'Tu capacidad de enfocarte es tu mayor fortaleza.'},{e:'🌊',t:'Fluyes con gracia',m:'Como el agua, tú también encontrarás tu camino.'},{e:'🦋',t:'Estás en el camino correcto',m:'Pequeñas pausas transforman días difíciles en posibles.'}];
+function showWin(){const w=wins[Math.floor(Math.random()*wins.length)];document.getElementById('wemoji').textContent=w.e;document.getElementById('wtitle').textContent=w.t;document.getElementById('wmsg').textContent=w.m;document.getElementById('wov').classList.add('show');}
+function closeWin(){document.getElementById('wov').classList.remove('show');}
+
+/* ══════════════════════════════════════════════════════
+   TABS
+══════════════════════════════════════════════════════ */
+function switchTab(id){
+  document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.gpanel').forEach(p=>p.classList.remove('active'));
+  const map={breath:0,click:1,find:2,bubble:3,memory:4,star:5,color:6};
+  document.querySelectorAll('.tbtn')[map[id]].classList.add('active');
+  document.getElementById('game-'+id).classList.add('active');
+}
+
+/* ══════════════════════════════════════════════════════
+   GAME 1: BREATHING
+══════════════════════════════════════════════════════ */
+let bA=false,bPh='idle',bCy=0,bTo=4,bTm=null;
+function handleBreath(){if(!bA)startBreath();}
+function startBreath(){bA=true;bCy=0;updB();bPh='inhale';runB();}
+function runB(){
+  clearTimeout(bTm);
+  const inn=document.getElementById('binner'),out=document.getElementById('bouter'),rng=document.getElementById('bring'),lbl=document.getElementById('blabel');
+  if(bPh==='inhale'){lbl.textContent='Inhala… expande tu pecho suavemente';inn.style.transform='scale(1.42)';out.style.transform='scale(1.22)';rng.style.transform='scale(1.15)';inn.style.boxShadow='0 0 55px rgba(var(--rgb1),.85),inset 0 0 25px rgba(255,255,255,.12)';inn.textContent='Inhala';bTm=setTimeout(()=>{bPh='hold';runB();},4000);}
+  else if(bPh==='hold'){lbl.textContent='Mantén… sostenlo suavemente';inn.textContent='Sostén';bTm=setTimeout(()=>{bPh='exhale';runB();},3000);}
+  else{lbl.textContent='Exhala lentamente… suelta la tensión';inn.style.transform='scale(1)';out.style.transform='scale(1)';rng.style.transform='scale(1)';inn.style.boxShadow='0 0 30px rgba(var(--rgb1),.5),inset 0 0 20px rgba(255,255,255,.1)';inn.textContent='Exhala';bTm=setTimeout(()=>{bCy++;updB();if(bCy>=bTo)finB();else{bPh='inhale';runB();}},5000);}
+}
+function updB(){document.getElementById('bcnt').textContent=bCy+' / '+bTo;document.getElementById('bfill').style.width=(bCy/bTo*100)+'%';}
+function finB(){bA=false;clearTimeout(bTm);document.getElementById('blabel').textContent='¡Completado! Cuatro ciclos de respiración 🌿';document.getElementById('binner').textContent='✓';document.getElementById('breset').style.display='inline-flex';setTimeout(showWin,700);}
+function resetBreath(){clearTimeout(bTm);bA=false;bCy=0;bPh='idle';const inn=document.getElementById('binner');inn.style.transform='scale(1)';inn.style.boxShadow='0 0 30px rgba(var(--rgb1),.5),inset 0 0 20px rgba(255,255,255,.1)';inn.textContent='Toca';document.getElementById('bouter').style.transform='scale(1)';document.getElementById('bring').style.transform='scale(1)';document.getElementById('blabel').textContent='Toca el círculo para comenzar';document.getElementById('breset').style.display='none';updB();}
+
+/* ══════════════════════════════════════════════════════
+   GAME 2: CLICK CALM
+══════════════════════════════════════════════════════ */
+const cE=['🌿','🍃','🌱','🌾','🌲'],oE=['📚','⏰','📝','💻','📊','🔋','📌','💾'];
+let cSc=0,cEr=0,cTg=0;
+function initClick(){cSc=0;cEr=0;cTg=0;document.getElementById('cerrors').textContent='0';document.getElementById('cscore').textContent='0';const g=document.getElementById('cgrid');g.innerHTML='';const calm=new Set();while(calm.size<4)calm.add(Math.floor(Math.random()*20));cTg=4;document.getElementById('ctarget').textContent=4;for(let i=0;i<20;i++){const btn=document.createElement('button');btn.className='citem';if(calm.has(i)){btn.classList.add('calm');btn.textContent=cE[Math.floor(Math.random()*cE.length)];btn.dataset.c='1';}else{btn.textContent=oE[Math.floor(Math.random()*oE.length)];btn.dataset.c='0';}btn.addEventListener('click',handleCl);g.appendChild(btn);}}
+function handleCl(e){const b=e.currentTarget;if(b.classList.contains('found'))return;if(b.dataset.c==='1'){b.classList.remove('calm');b.classList.add('found');cSc++;document.getElementById('cscore').textContent=cSc;if(cSc>=cTg)setTimeout(showWin,400);}else{cEr++;document.getElementById('cerrors').textContent=cEr;b.classList.add('wflash');setTimeout(()=>b.classList.remove('wflash'),350);}}
+
+/* ══════════════════════════════════════════════════════
+   GAME 3: FIND
+══════════════════════════════════════════════════════ */
+const fT=['🌿','🌸','🍃','🌊','🦋'],fD=['🍕','🎮','📱','🎵','🚗','🌮','🎲','🔑','🎪','📦','🧲','🔭','🎯','🧩'];
+let fQ=[],fI=0;
+function initFind(){fQ=[...fT].sort(()=>Math.random()-.5);fI=0;updF();bFG();bFD();}
+function updF(){if(fI<fQ.length)document.getElementById('femoji').textContent=fQ[fI];}
+function bFD(){const r=document.getElementById('fdots');r.innerHTML='';fQ.forEach((_,i)=>{const d=document.createElement('div');d.className='fdot';d.id='fd'+i;r.appendChild(d);});}
+function bFG(){const g=document.getElementById('fgrid');g.innerHTML='';const all=[];fQ.forEach(t=>all.push({e:t,t:true}));for(let i=all.length;i<30;i++)all.push({e:fD[Math.floor(Math.random()*fD.length)],t:false});all.sort(()=>Math.random()-.5);all.forEach(item=>{const btn=document.createElement('button');btn.className='fitem';btn.textContent=item.e;btn.dataset.e=item.e;btn.addEventListener('click',handleF);g.appendChild(btn);});}
+function handleF(e){const b=e.currentTarget;if(b.classList.contains('correct'))return;if(b.dataset.e===fQ[fI]){b.classList.add('correct');document.getElementById('fd'+fI).classList.add('done');fI++;if(fI>=fQ.length){setTimeout(showWin,400);return;}updF();}else{b.classList.add('wflash');setTimeout(()=>b.classList.remove('wflash'),350);}}
+
+/* ══════════════════════════════════════════════════════
+   GAME 4: BUBBLE POP
+══════════════════════════════════════════════════════ */
+let bScore=0,bMiss=0,bInterval=null,bRunning=false;
+const bubbleEmojis=['🫧','🌸','🌿','⭐','🦋','✨','🌊','🍃'];
+function initBubble(){clearInterval(bInterval);bScore=0;bMiss=0;document.getElementById('bscore').textContent='0';document.getElementById('bmiss').textContent='0';document.getElementById('bpgame').innerHTML='';bRunning=true;let count=0;bInterval=setInterval(()=>{if(!bRunning)return;spawnBubble();count++;if(count>=18){clearInterval(bInterval);bRunning=false;setTimeout(()=>{if(bScore>=12)showWin();},1200);}},800);}
+function spawnBubble(){
+  const arena=document.getElementById('bpgame');if(!arena)return;
+  const b=document.createElement('button');b.className='bubble';
+  const size=40+Math.random()*30;const hue=120+Math.random()*120;
+  b.style.cssText=`width:${size}px;height:${size}px;left:${Math.random()*(arena.offsetWidth-size)}px;bottom:0;background:radial-gradient(circle at 35% 35%,rgba(255,255,255,.5),hsla(${hue},70%,65%,.7));border:none;animation-duration:${3+Math.random()*3}s`;
+  b.textContent=bubbleEmojis[Math.floor(Math.random()*bubbleEmojis.length)];
+  b.addEventListener('click',()=>{b.classList.add('popped');bScore++;document.getElementById('bscore').textContent=bScore;setTimeout(()=>b.remove(),350);});
+  b.addEventListener('animationend',()=>{if(!b.classList.contains('popped')){bMiss++;document.getElementById('bmiss').textContent=bMiss;b.remove();}});
+  arena.appendChild(b);
+}
+
+/* ══════════════════════════════════════════════════════
+   GAME 5: MEMORY
+══════════════════════════════════════════════════════ */
+const memEmojis=['🌿','🌸','🍃','🌊','🦋','✨','🌈','🌙'];
+let memFlipped=[],memMatched=0,memMoves=0,memLock=false;
+function initMemory(){
+  memFlipped=[];memMatched=0;memMoves=0;memLock=false;
+  document.getElementById('mscore').textContent='0';document.getElementById('mmoves').textContent='0';
+  const pairs=[...memEmojis,...memEmojis].sort(()=>Math.random()-.5);
+  const g=document.getElementById('memgrid');g.innerHTML='';
+  pairs.forEach((em,i)=>{
+    const card=document.createElement('div');card.className='memcard';card.dataset.emoji=em;card.dataset.idx=i;
+    card.innerHTML=`<div class="memcard-inner"><div class="memcard-front">🌀</div><div class="memcard-back">${em}</div></div>`;
+    card.addEventListener('click',handleMem);g.appendChild(card);
+  });
+}
+function handleMem(e){
+  const card=e.currentTarget;
+  if(memLock||card.classList.contains('flipped')||card.classList.contains('matched'))return;
+  card.classList.add('flipped');memFlipped.push(card);
+  if(memFlipped.length===2){
+    memLock=true;memMoves++;document.getElementById('mmoves').textContent=memMoves;
+    if(memFlipped[0].dataset.emoji===memFlipped[1].dataset.emoji){
+      memFlipped.forEach(c=>{c.classList.add('matched');c.style.opacity='.6';});
+      memMatched++;document.getElementById('mscore').textContent=memMatched;
+      memFlipped=[];memLock=false;
+      if(memMatched===memEmojis.length)setTimeout(showWin,500);
+    }else{setTimeout(()=>{memFlipped.forEach(c=>c.classList.remove('flipped'));memFlipped=[];memLock=false;},900);}
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   GAME 6: STAR CATCH
+══════════════════════════════════════════════════════ */
+let sScore=0,sLives=3,sMax=15,sCount=0,sInt=null,sRunning=false;
+const starObjs=['⭐','🌟','✨','💫'];const badObjs=['☁️','🌧️'];
+function initStar(){clearInterval(sInt);sScore=0;sLives=3;sCount=0;sRunning=true;document.getElementById('sscore').textContent='0';document.getElementById('slives').textContent='3';document.getElementById('sbar').style.width='100%';document.getElementById('stargame').innerHTML='';sInt=setInterval(()=>{if(!sRunning)return;spawnStar();sCount++;if(sCount>=sMax){clearInterval(sInt);sRunning=false;setTimeout(()=>{if(sScore>=8)showWin();},1000);}},700);}
+function spawnStar(){
+  const a=document.getElementById('stargame');if(!a)return;
+  const isBad=Math.random()<.25;
+  const s=document.createElement('button');s.className='star-obj';
+  s.textContent=isBad?badObjs[Math.floor(Math.random()*badObjs.length)]:starObjs[Math.floor(Math.random()*starObjs.length)];
+  s.style.cssText=`left:${Math.random()*(a.offsetWidth-40)}px;top:-30px;background:none;border:none;animation-duration:${2.5+Math.random()*2}s`;
+  s.dataset.bad=isBad?'1':'0';
+  s.addEventListener('click',()=>{s.classList.add('caught');if(isBad){sLives--;document.getElementById('slives').textContent=sLives;document.getElementById('sbar').style.width=(sLives/3*100)+'%';if(sLives<=0){clearInterval(sInt);sRunning=false;setTimeout(()=>showWin(),600);}}else{sScore++;document.getElementById('sscore').textContent=sScore;}setTimeout(()=>s.remove(),400);});
+  s.addEventListener('animationend',()=>s.remove());
+  a.appendChild(s);
+}
+
+/* ══════════════════════════════════════════════════════
+   GAME 7: COLOR MATCH
+══════════════════════════════════════════════════════ */
+const cgRounds=[{p:'¿Cuál transmite calma?',correct:'😌',opts:['😌','😤','😰','🤬']},{p:'¿Cuál representa alegría?',correct:'😄',opts:['😢','😄','😡','😱']},{p:'¿Cuál es de la naturaleza?',correct:'🌿',opts:['🔥','💣','🌿','⚡']},{p:'¿Cuál simboliza paz?',correct:'☮️',opts:['💥','☮️','🗡️','💢']},{p:'¿Cuál transmite amor?',correct:'💚',opts:['💚','💔','😤','🖤']},{p:'¿Cuál es relajante?',correct:'🛀',opts:['🏃','🗣️','🛀','😤']},{p:'¿Cuál es suave?',correct:'🌸',opts:['⚡','🌸','🔥','💣']},{p:'¿Cuál es tranquilizador?',correct:'🌊',opts:['💥','🌋','🌊','⚡']}];
+let cgIdx=0,cgScore=0,cgErr=0;
+function initColorGame(){cgIdx=0;cgScore=0;cgErr=0;document.getElementById('cgscore').textContent='0';document.getElementById('cgerr').textContent='0';showCgRound();}
+function showCgRound(){
+  if(cgIdx>=cgRounds.length){if(cgScore>=6)showWin();cgIdx=0;return;}
+  const r=cgRounds[cgIdx];
+  document.getElementById('csprog').textContent=`Ronda ${cgIdx+1} de ${cgRounds.length}`;
+  document.getElementById('csprompt').textContent=r.p;
+  document.getElementById('cstarget').textContent=r.correct;
+  const opts=[...r.opts].sort(()=>Math.random()-.5);
+  const c=document.getElementById('csopts');c.innerHTML='';
+  opts.forEach(o=>{const btn=document.createElement('button');btn.className='cs-opt';btn.textContent=o;btn.style.background='rgba(var(--rgb1),.15)';btn.addEventListener('click',()=>{if(o===r.correct){btn.classList.add('correct-pick');cgScore++;document.getElementById('cgscore').textContent=cgScore;}else{btn.classList.add('wrong-pick');cgErr++;document.getElementById('cgerr').textContent=cgErr;}setTimeout(()=>{cgIdx++;showCgRound();},500);});c.appendChild(btn);});
+}
+
+/* ══════════════════════════════════════════════════════
+   ADMIN PANEL — secret command: type "admin123"
+══════════════════════════════════════════════════════ */
+let adminSeq='';
+document.addEventListener('keydown',e=>{
+  if(document.activeElement.tagName==='INPUT')return;
+  adminSeq+=e.key;
+  if(adminSeq.length>8)adminSeq=adminSeq.slice(-8);
+  if(adminSeq.endsWith('admin123'))openAdmin();
+});
+function openAdmin(){document.getElementById('adminOv').classList.add('show');adminSyncMsgs();}
+function closeAdmin(){document.getElementById('adminOv').classList.remove('show');}
+function adminTab(t){
+  document.querySelectorAll('.admin-nav-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector(`.admin-nav-btn[onclick="adminTab('${t}')"]`).classList.add('active');
+  document.getElementById('adminChat').style.display=t==='chat'?'flex':'none';
+  document.getElementById('adminStats').style.display=t==='stats'?'block':'none';
+}
+
+/* ══════════════════════════════════════════════════════
+   CHAT — Firebase or local fallback
+══════════════════════════════════════════════════════ */
+let nickname='Usuario';
+let localMsgs=[];
+let totalMsgs=0,adminReplies=0;
+
+function setNick(){const v=document.getElementById('nickInp').value.trim();if(v){nickname=v;document.getElementById('nickInp').value='';addSysMsg('Nombre cambiado a: '+nickname);}}
+
+function fmtTime(){const d=new Date();return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');}
+
+function buildMsgEl(m,container){
+  const div=document.createElement('div');div.className='msg '+m.role;
+  div.textContent=m.text;
+  const t=document.createElement('div');t.className='msg-time';t.textContent=(m.name?m.name+' · ':'')+fmtTime();
+  div.appendChild(t);container.appendChild(div);container.scrollTop=container.scrollHeight;
+}
+
+function addSysMsg(text){
+  const m={role:'system',text};
+  localMsgs.push(m);renderChats();
+}
+
+function renderChats(){
+  const uc=document.getElementById('chatMsgs');const ac=document.getElementById('adminMsgs');
+  uc.innerHTML='';ac.innerHTML='';
+  localMsgs.forEach(m=>{buildMsgEl(m,uc);buildMsgEl(m,ac);});
+  totalMsgs=localMsgs.filter(m=>m.role!=='system').length;
+  adminReplies=localMsgs.filter(m=>m.role==='admin').length;
+  document.getElementById('statMsgs').textContent=totalMsgs;
+  document.getElementById('statAdmin').textContent=adminReplies;
+  const users=new Set(localMsgs.filter(m=>m.role==='user').map(m=>m.name)).size;
+  document.getElementById('statUsers').textContent=users||1;
+}
+
+function sendChat(){
+  const inp=document.getElementById('chatInp');const text=inp.value.trim();if(!text)return;
+  inp.value='';
+  const m={role:'user',text,name:nickname};
+  // Try Firebase first, fallback to local
+  if(window._fbReady && window._fbPush){
+    window._fbPush(m).catch(()=>{localMsgs.push(m);renderChats();});
+  }else{localMsgs.push(m);renderChats();}
+  // Show typing indicator
+  const typing=document.getElementById('chatTyping');typing.textContent='SERENA está escribiendo…';
+  setTimeout(()=>typing.textContent='',2500);
+}
+
+function adminSend(){
+  const inp=document.getElementById('adminInp');const text=inp.value.trim();if(!text)return;
+  inp.value='';
+  const m={role:'admin',text,name:'SERENA'};
+  if(window._fbReady && window._fbPush){
+    window._fbPush(m).catch(()=>{localMsgs.push(m);renderChats();});
+  }else{localMsgs.push(m);renderChats();}
+}
+
+function adminSyncMsgs(){
+  // If Firebase is ready, use it; otherwise show local
+  if(window._fbReady && window._fbListen){
+    window._fbListen(msgs=>{
+      localMsgs=msgs.map(m=>({role:m.role||'user',text:m.text||'',name:m.name||'Usuario'}));
+      renderChats();
+    });
+  }else{renderChats();}
+}
+
+// Try to connect Firebase listener on load
+setTimeout(()=>{if(window._fbReady && window._fbListen){window._fbListen(msgs=>{localMsgs=msgs.map(m=>({role:m.role||'user',text:m.text||'',name:m.name||'Usuario'}));renderChats();});}},2000);
+
+/* INIT GAMES */
+initClick();initFind();initColorGame();
+</script>
+</body>
 </html>
