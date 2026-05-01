@@ -9,13 +9,9 @@
 <!-- ══ FIREBASE REALTIME CHAT ══ -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, push, onChildAdded, serverTimestamp, query, limitToLast }
+  import { getDatabase, ref, push, set, remove, onChildAdded, onValue, serverTimestamp, query, limitToLast }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-  // ╔══════════════════════════════════════════════════════════════╗
-  // ║  PEGA AQUÍ TU firebaseConfig PARA ACTIVAR EL CHAT ONLINE   ║
-  // ║  console.firebase.google.com → proyecto → ⚙️ → Tus apps   ║
-  // ╚══════════════════════════════════════════════════════════════╝
   const firebaseConfig = {
     apiKey: "AIzaSyB3z7qf0lM3s8kIzJcq7AqUJLkU7bVVkLo",
     authDomain: "serena-chat.firebaseapp.com",
@@ -27,37 +23,46 @@
     measurementId: "G-KWMBLLT8QV"
   };
 
-  const isConfigured = firebaseConfig.apiKey !== "TU_API_KEY";
+  try {
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-  if (isConfigured) {
-    try {
-      const app = initializeApp(firebaseConfig);
-      const db = getDatabase(app);
-      const msgsRef = ref(db, 'serena_chat');
-      const recentQ = query(msgsRef, limitToLast(100));
+    // Enviar mensaje a la sesión de este usuario
+    window._fbSendMsg = (sessionId, data) =>
+      push(ref(db, `serena_sessions/${sessionId}/messages`), { ...data, ts: serverTimestamp(), client: Date.now() });
 
-      // Enviar un mensaje a Firebase
-      window._fbSend = (data) => push(msgsRef, {
-        ...data,
-        ts: serverTimestamp(),
-        client: Date.now()
+    // Registrar/actualizar info de sesión (nombre, hora)
+    window._fbSetSession = (sessionId, info) =>
+      set(ref(db, `serena_sessions/${sessionId}/info`), { ...info, updatedAt: serverTimestamp() });
+
+    // Usuario escucha sus propios mensajes (solo su ruta)
+    window._fbListenSession = (sessionId, cb) => {
+      const q = query(ref(db, `serena_sessions/${sessionId}/messages`), limitToLast(80));
+      onChildAdded(q, snap => { if(snap.val()) cb({ id: snap.key, ...snap.val() }); });
+    };
+
+    // Admin escucha TODAS las sesiones nuevas + sus mensajes
+    window._fbListenAllSessions = (onSession, onMsg) => {
+      onChildAdded(ref(db, 'serena_sessions'), snap => {
+        const sid = snap.key;
+        const info = snap.val()?.info || {};
+        onSession(sid, info);
+        const q = query(ref(db, `serena_sessions/${sid}/messages`), limitToLast(80));
+        onChildAdded(q, mSnap => { if(mSnap.val()) onMsg(sid, { id: mSnap.key, ...mSnap.val() }); });
+        onValue(ref(db, `serena_sessions/${sid}/info`), iSnap => {
+          if(iSnap.val() && window._fbSessionInfoUpdated) window._fbSessionInfoUpdated(sid, iSnap.val());
+        });
       });
+    };
 
-      // Escuchar SOLO mensajes nuevos (onChildAdded) — tiempo real
-      window._fbListen = (cb) => onChildAdded(recentQ, snap => {
-        if (snap.val()) cb({ id: snap.key, ...snap.val() });
-      });
+    // Admin elimina una sesión completa
+    window._fbDeleteSession = (sessionId) => remove(ref(db, `serena_sessions/${sessionId}`));
 
-      window._fbReady = true;
-      // Notificar a la UI que Firebase está listo
-      window.dispatchEvent(new CustomEvent('fbReady'));
-      console.log('✅ Firebase activo — chat online en tiempo real');
-    } catch(e) {
-      console.warn('Firebase error:', e.message);
-      window._fbReady = false;
-    }
-  } else {
-    console.info('ℹ️ Modo demo — pega tu firebaseConfig para chat online real');
+    window._fbReady = true;
+    window.dispatchEvent(new CustomEvent('fbReady'));
+    console.log('✅ Firebase — chat por sesión activo');
+  } catch(e) {
+    console.warn('Firebase error:', e.message);
     window._fbReady = false;
   }
 </script>
@@ -393,6 +398,18 @@ footer .fsmall{font-size:.75rem;opacity:.4;margin-top:1.2rem}
 .stat-card{background:rgba(var(--rgb1),.08);border:1px solid rgba(var(--rgb1),.15);border-radius:var(--rmd);padding:1.2rem;text-align:center}
 .stat-val{font-size:2rem;font-weight:700;color:var(--c1)}
 .stat-lbl{font-size:.75rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px}
+/* ══ ADMIN CONV LIST ══ */
+.admin-convs{display:flex;flex-direction:column;gap:.4rem;flex:1;overflow-y:auto;max-height:calc(100vh - 240px)}
+.admin-convs::-webkit-scrollbar{width:3px}
+.admin-convs::-webkit-scrollbar-thumb{background:rgba(var(--rgb1),.3);border-radius:2px}
+.conv-item{background:rgba(var(--rgb1),.07);border:1px solid rgba(var(--rgb1),.15);border-radius:var(--rsm);padding:.65rem .8rem;cursor:pointer;transition:all .3s;position:relative}
+.conv-item:hover{background:rgba(var(--rgb1),.14)}
+.conv-item.active{background:rgba(var(--rgb1),.18);border-color:rgba(var(--rgb1),.4)}
+.conv-item.unread{border-left:3px solid var(--c1)}
+.conv-name{font-size:.82rem;font-weight:600;color:var(--text-bright);margin-bottom:.18rem}
+.conv-preview{font-size:.72rem;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
+.conv-time{font-size:.65rem;color:var(--text-dim);position:absolute;top:.6rem;right:.7rem}
+.conv-badge{position:absolute;top:.5rem;right:.5rem;background:var(--c1);color:#0d1f14;font-size:.65rem;font-weight:700;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center}
 
 /* ════════════════════════ HAMBURGER MENU ════════════════════════ */
 .hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;border:none;background:rgba(var(--rgb1),.1);border-radius:8px;transition:background .3s}
@@ -705,23 +722,38 @@ footer .fsmall{font-size:.75rem;opacity:.4;margin-top:1.2rem}
 <!-- ══ ADMIN PANEL ══ -->
 <div class="admin-overlay" id="adminOv">
   <div class="admin-layout">
+    <!-- Sidebar: lista de conversaciones -->
     <div class="admin-sidebar">
       <div class="admin-logo">🌿 SERENA <span>ADMIN</span></div>
-      <div class="admin-nav">
-        <button class="admin-nav-btn active" onclick="adminTab('chat')">💬 <span>Chat en vivo</span></button>
-        <button class="admin-nav-btn" onclick="adminTab('stats')">📊 <span>Estadísticas</span></button>
+      <div style="font-size:.72rem;color:var(--text-dim);margin-bottom:.8rem;padding:0 .2rem">Conversaciones activas</div>
+      <div class="admin-convs" id="adminConvs">
+        <div style="font-size:.8rem;color:var(--text-dim);font-style:italic;padding:.5rem">Esperando usuarios…</div>
       </div>
-      <button class="admin-close-btn" onclick="closeAdmin()">✕ Salir del panel</button>
+      <div style="margin-top:auto;display:flex;flex-direction:column;gap:.5rem">
+        <button class="admin-nav-btn" onclick="adminTab('stats')" id="btnStats">📊 <span>Estadísticas</span></button>
+        <button class="admin-close-btn" onclick="closeAdmin()">✕ Salir del panel</button>
+      </div>
     </div>
+    <!-- Main: chat de la sesión seleccionada -->
     <div class="admin-main">
       <div class="admin-topbar">
-        <h2>Panel de Administración — SERENA</h2>
-        <div class="admin-online"><span class="status-dot"></span> Sistema activo</div>
+        <div>
+          <h2 id="adminChatTitle">Selecciona una conversación</h2>
+          <div style="font-size:.75rem;color:var(--text-dim);margin-top:.15rem" id="adminChatSub">Elige un usuario del panel izquierdo</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:1rem">
+          <button id="adminDeleteBtn" onclick="adminDeleteCurrent()" style="display:none;background:rgba(200,80,80,.15);color:#f08080;border:1px solid rgba(200,80,80,.3);border-radius:var(--rsm);padding:.45rem .9rem;font-family:Poppins,sans-serif;font-size:.78rem;cursor:pointer;transition:all .3s">🗑 Finalizar chat</button>
+          <div class="admin-online"><span class="status-dot"></span> Sistema activo</div>
+        </div>
       </div>
       <div class="admin-content">
-        <!-- Chat Tab -->
+        <!-- Chat view -->
         <div id="adminChat" class="admin-chat-area">
-          <div class="admin-chat-msgs" id="adminMsgs"></div>
+          <div class="admin-chat-msgs" id="adminMsgs">
+            <div style="text-align:center;padding:3rem;color:var(--text-dim);font-size:.9rem">
+              👈 Selecciona una conversación para responder
+            </div>
+          </div>
           <div class="admin-input-row">
             <input class="admin-inp" id="adminInp" type="text" placeholder="Responde como SERENA…" maxlength="400" onkeydown="if(event.key==='Enter')adminSend()">
             <button class="admin-send" onclick="adminSend()">
@@ -729,12 +761,12 @@ footer .fsmall{font-size:.75rem;opacity:.4;margin-top:1.2rem}
             </button>
           </div>
         </div>
-        <!-- Stats Tab -->
+        <!-- Stats view -->
         <div id="adminStats" style="display:none">
           <div class="admin-stats">
             <div class="stat-card"><div class="stat-val" id="statMsgs">0</div><div class="stat-lbl">Mensajes totales</div></div>
             <div class="stat-card"><div class="stat-val" id="statUsers">0</div><div class="stat-lbl">Usuarios activos</div></div>
-            <div class="stat-card"><div class="stat-val" id="statAdmin">0</div><div class="stat-lbl">Respuestas admin</div></div>
+            <div class="stat-card"><div class="stat-val" id="statAdmin">0</div><div class="stat-lbl">Respuestas dadas</div></div>
           </div>
         </div>
       </div>
@@ -967,7 +999,7 @@ document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
    WIN
 ══════════════════════════════════════════════════════ */
 const wins=[{e:'🌿',t:'¡Lo estás haciendo muy bien!',m:'Cada respiro es un pequeño acto de amor hacia ti mismo.'},{e:'✨',t:'Respira, todo está en calma',m:'Has encontrado tu espacio de paz. Llévalo contigo hoy.'},{e:'🌸',t:'¡Qué mente tan serena!',m:'Tu capacidad de enfocarte es tu mayor fortaleza.'},{e:'🌊',t:'Fluyes con gracia',m:'Como el agua, tú también encontrarás tu camino.'},{e:'🦋',t:'Estás en el camino correcto',m:'Pequeñas pausas transforman días difíciles en posibles.'}];
-function showWin(){const w=wins[Math.floor(Math.random()*wins.length)];document.getElementById('wemoji').textContent=w.e;document.getElementById('wtitle').textContent=w.t;document.getElementById('wmsg').textContent=w.m;document.getElementById('wov').classList.add('show');}
+function showWin(){const w=wins[Math.floor(Math.random()*wins.length)];document.getElementById('wemoji').textContent=w.e;document.getElementById('wtitle').textContent=w.t;document.getElementById('wmsg').textContent=w.m;playWinSound(); document.getElementById('wov').classList.add('show');}
 function closeWin(){document.getElementById('wov').classList.remove('show');}
 
 /* ══════════════════════════════════════════════════════
@@ -1033,7 +1065,7 @@ function spawnBubble(){
   const baseColor=palette[Math.floor(Math.random()*palette.length)];
   b.style.cssText=`width:${size}px;height:${size}px;left:${Math.random()*(arena.offsetWidth-size)}px;bottom:0;background:radial-gradient(circle at 35% 35%,rgba(255,255,255,.55),${baseColor}bb);border:2px solid ${baseColor}66;box-shadow:0 0 12px ${baseColor}55;animation-duration:${3+Math.random()*3}s`;
   b.textContent=bubbleEmojis[Math.floor(Math.random()*bubbleEmojis.length)];
-  b.addEventListener('click',()=>{b.classList.add('popped');bScore++;document.getElementById('bscore').textContent=bScore;setTimeout(()=>b.remove(),350);});
+  b.addEventListener('click',()=>{b.classList.add('popped');playPopSound();bScore++;document.getElementById('bscore').textContent=bScore;setTimeout(()=>b.remove(),350);});
   b.addEventListener('animationend',()=>{if(!b.classList.contains('popped')){bMiss++;document.getElementById('bmiss').textContent=bMiss;b.remove();}});
   arena.appendChild(b);
 }
@@ -1062,7 +1094,7 @@ function handleMem(e){
     memLock=true;memMoves++;document.getElementById('mmoves').textContent=memMoves;
     if(memFlipped[0].dataset.emoji===memFlipped[1].dataset.emoji){
       memFlipped.forEach(c=>{c.classList.add('matched');c.style.opacity='.6';});
-      memMatched++;document.getElementById('mscore').textContent=memMatched;
+      playMatchSound();memMatched++;document.getElementById('mscore').textContent=memMatched;
       memFlipped=[];memLock=false;
       if(memMatched===memEmojis.length)setTimeout(showWin,500);
     }else{setTimeout(()=>{memFlipped.forEach(c=>c.classList.remove('flipped'));memFlipped=[];memLock=false;},900);}
@@ -1082,7 +1114,7 @@ function spawnStar(){
   s.textContent=isBad?badObjs[Math.floor(Math.random()*badObjs.length)]:starObjs[Math.floor(Math.random()*starObjs.length)];
   s.style.cssText=`left:${Math.random()*(a.offsetWidth-40)}px;top:-30px;background:none;border:none;animation-duration:${2.5+Math.random()*2}s`;
   s.dataset.bad=isBad?'1':'0';
-  s.addEventListener('click',()=>{s.classList.add('caught');if(isBad){sLives--;document.getElementById('slives').textContent=sLives;document.getElementById('sbar').style.width=(sLives/3*100)+'%';if(sLives<=0){clearInterval(sInt);sRunning=false;setTimeout(()=>showWin(),600);}}else{sScore++;document.getElementById('sscore').textContent=sScore;}setTimeout(()=>s.remove(),400);});
+  s.addEventListener('click',()=>{s.classList.add('caught');if(isBad){sLives--;document.getElementById('slives').textContent=sLives;document.getElementById('sbar').style.width=(sLives/3*100)+'%';if(sLives<=0){clearInterval(sInt);sRunning=false;setTimeout(()=>showWin(),600);}}else{playCatchSound();sScore++;document.getElementById('sscore').textContent=sScore;}setTimeout(()=>s.remove(),400);});
   s.addEventListener('animationend',()=>s.remove());
   a.appendChild(s);
 }
@@ -1101,7 +1133,7 @@ function showCgRound(){
   document.getElementById('cstarget').textContent=r.correct;
   const opts=[...r.opts].sort(()=>Math.random()-.5);
   const c=document.getElementById('csopts');c.innerHTML='';
-  opts.forEach(o=>{const btn=document.createElement('button');btn.className='cs-opt';btn.textContent=o;btn.style.background='rgba(var(--rgb1),.15)';btn.addEventListener('click',()=>{if(o===r.correct){btn.classList.add('correct-pick');cgScore++;document.getElementById('cgscore').textContent=cgScore;}else{btn.classList.add('wrong-pick');cgErr++;document.getElementById('cgerr').textContent=cgErr;}setTimeout(()=>{cgIdx++;showCgRound();},500);});c.appendChild(btn);});
+  opts.forEach(o=>{const btn=document.createElement('button');btn.className='cs-opt';btn.textContent=o;btn.style.background='rgba(var(--rgb1),.15)';btn.addEventListener('click',()=>{if(o===r.correct){playClickSound();btn.classList.add('correct-pick');cgScore++;document.getElementById('cgscore').textContent=cgScore;}else{btn.classList.add('wrong-pick');cgErr++;document.getElementById('cgerr').textContent=cgErr;}setTimeout(()=>{cgIdx++;showCgRound();},500);});c.appendChild(btn);});
 }
 
 /* ══════════════════════════════════════════════════════
@@ -1124,22 +1156,170 @@ function adminTab(t){
 }
 
 /* ══════════════════════════════════════════════════════
-   CHAT — cada usuario ve solo su hilo; admin ve todo
+   SONIDOS RELAJANTES — Web Audio API
+══════════════════════════════════════════════════════ */
+let audioCtx = null, bgGain = null, bgPlaying = false;
+
+function getAudio(){
+  if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+// Genera un tono suave tipo pad
+function playTone(freq, dur=0.4, vol=0.06, type='sine'){
+  const ac = getAudio();
+  const osc = ac.createOscillator();
+  const gain = ac.createGain();
+  osc.connect(gain); gain.connect(ac.destination);
+  osc.type = type; osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0, ac.currentTime);
+  gain.gain.linearRampToValueAtTime(vol, ac.currentTime + 0.05);
+  gain.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + dur);
+  osc.start(); osc.stop(ac.currentTime + dur + 0.1);
+}
+
+// Acorde relajante (jazz suave)
+function playWinSound(){
+  const notes = [261.6, 329.6, 392, 523.2]; // C-E-G-C
+  notes.forEach((n,i) => setTimeout(() => playTone(n, 0.7, 0.07, 'sine'), i*80));
+}
+
+function playClickSound(){
+  playTone(440, 0.12, 0.04, 'sine');
+  setTimeout(()=>playTone(554.4, 0.1, 0.03, 'sine'), 60);
+}
+
+function playPopSound(){
+  playTone(600, 0.08, 0.05, 'sine');
+  setTimeout(()=>playTone(800, 0.06, 0.04, 'sine'), 40);
+}
+
+function playMatchSound(){
+  [392, 493.9, 587.3].forEach((n,i)=>setTimeout(()=>playTone(n,0.4,0.06),i*100));
+}
+
+function playCatchSound(){
+  playTone(659.3, 0.15, 0.06, 'sine');
+  setTimeout(()=>playTone(783.9, 0.12, 0.05, 'sine'), 80);
+}
+
+function playErrorSound(){
+  playTone(220, 0.2, 0.04, 'triangle');
+}
+
+function playChatSendSound(){
+  playTone(523.2, 0.1, 0.04, 'sine');
+  setTimeout(()=>playTone(659.3, 0.08, 0.03, 'sine'), 60);
+}
+
+// Música de fondo generativa (ambient jazz suave)
+function startBgMusic(){
+  if(bgPlaying) return;
+  bgPlaying = true;
+  const ac = getAudio();
+  bgGain = ac.createGain();
+  bgGain.gain.value = 0.018;
+  bgGain.connect(ac.destination);
+
+  // Progresión de acordes jazz suave: Cmaj7 → Am7 → Fmaj7 → G7
+  const progressions = [
+    [261.6,329.6,392,493.9],   // Cmaj7
+    [220,261.6,329.6,440],     // Am7
+    [174.6,220,261.6,349.2],   // Fmaj7
+    [196,246.9,293.7,392],     // G7
+  ];
+  let pIdx = 0;
+
+  function playChord(){
+    if(!bgPlaying) return;
+    const chord = progressions[pIdx % progressions.length]; pIdx++;
+    chord.forEach((freq, i) => {
+      const osc = ac.createOscillator();
+      const g = ac.createGain();
+      osc.connect(g); g.connect(bgGain);
+      osc.type = 'sine';
+      // Slightly detune for warmth
+      osc.frequency.value = freq * (1 + (Math.random()-0.5)*0.002);
+      g.gain.setValueAtTime(0, ac.currentTime);
+      g.gain.linearRampToValueAtTime(0.3/(i+1), ac.currentTime + 1.5);
+      g.gain.setValueAtTime(0.3/(i+1), ac.currentTime + 3.5);
+      g.gain.linearRampToValueAtTime(0, ac.currentTime + 5.5);
+      osc.start(); osc.stop(ac.currentTime + 6);
+    });
+    setTimeout(playChord, 5800);
+  }
+
+  // Melodía suave aleatoria sobre los acordes
+  const melodyNotes = [261.6,293.7,329.6,349.2,392,440,493.9,523.2,587.3,659.3];
+  function playMelody(){
+    if(!bgPlaying) return;
+    const note = melodyNotes[Math.floor(Math.random()*melodyNotes.length)];
+    const osc = ac.createOscillator();
+    const g = ac.createGain();
+    osc.connect(g); g.connect(bgGain);
+    osc.type = 'sine';
+    osc.frequency.value = note;
+    const dur = 0.4 + Math.random()*0.8;
+    g.gain.setValueAtTime(0, ac.currentTime);
+    g.gain.linearRampToValueAtTime(0.15, ac.currentTime+0.1);
+    g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime+dur);
+    osc.start(); osc.stop(ac.currentTime+dur+0.1);
+    setTimeout(playMelody, 400 + Math.random()*900);
+  }
+
+  playChord();
+  setTimeout(playMelody, 2000);
+}
+
+function stopBgMusic(){
+  if(bgGain){ bgGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime+1); }
+  bgPlaying = false;
+}
+
+// Botón flotante de música
+function buildMusicBtn(){
+  const btn = document.createElement('button');
+  btn.id = 'musicBtn';
+  btn.style.cssText = 'position:fixed;bottom:1.5rem;left:1.5rem;z-index:8000;width:42px;height:42px;border-radius:50%;background:rgba(var(--rgb1),.2);border:1px solid rgba(var(--rgb1),.4);color:var(--c1);font-size:1.1rem;cursor:pointer;transition:all .3s;backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center';
+  btn.title = 'Música relajante';
+  btn.innerHTML = '🎵';
+  btn.onclick = () => {
+    if(bgPlaying){ stopBgMusic(); btn.style.opacity='.5'; btn.innerHTML='🔇'; }
+    else { startBgMusic(); btn.style.opacity='1'; btn.innerHTML='🎵'; }
+  };
+  document.body.appendChild(btn);
+}
+buildMusicBtn();
+
+// Iniciar música automáticamente al primer click en la página
+document.addEventListener('click', function startOnce(){
+  startBgMusic();
+  document.removeEventListener('click', startOnce);
+}, { once: true });
+
+/* ══════════════════════════════════════════════════════
+   CHAT — sesiones independientes por usuario
 ══════════════════════════════════════════════════════ */
 let nickname = 'Visitante';
 let fbListening = false;
 let totalMsgs = 0, adminReplies = 0, uniqueUsers = new Set();
 
-// ID único por pestaña — identifica la sesión de este usuario
-const SESSION_ID = 'u' + Math.random().toString(36).slice(2,9) + Date.now().toString(36);
+// SESSION_ID persiste mientras la pestaña esté abierta
+// Si recarga la página conserva su historial
+const SESSION_ID = (()=>{
+  let sid = sessionStorage.getItem('serena_sid');
+  if(!sid){ sid = 'u' + Math.random().toString(36).slice(2,9) + Date.now().toString(36); sessionStorage.setItem('serena_sid', sid); }
+  return sid;
+})();
 
 function setNick(){
   const v = document.getElementById('nickInp').value.trim();
   if(v){
     nickname = v;
     document.getElementById('nickInp').value = '';
-    // Solo este usuario ve la confirmación
     appendToUser({role:'system', text:'Tu nombre es ahora: '+nickname+' 🌿'});
+    // Actualizar info de sesión en Firebase
+    if(window._fbSetSession) window._fbSetSession(SESSION_ID, { name: nickname, startedAt: Date.now() });
   }
 }
 
@@ -1148,154 +1328,237 @@ function fmtTime(){
   return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
 }
 
-/* Agrega burbuja al chat del USUARIO (vista pública) */
+/* ── USER SIDE ── */
 function appendToUser(m){
-  appendMsgEl(m, document.getElementById('chatMsgs'), false);
-}
-
-/* Agrega burbuja al panel del ADMIN */
-function appendToAdmin(m){
-  appendMsgEl(m, document.getElementById('adminMsgs'), true);
-}
-
-/* Construye el elemento de mensaje */
-function appendMsgEl(m, container, isAdmin){
+  const c = document.getElementById('chatMsgs');
   const role = m.role==='admin'?'admin':m.role==='system'?'system':'user';
   const wrap = document.createElement('div');
   wrap.className = 'msg '+role;
   wrap.style.animation = 'msgPop .35s cubic-bezier(.34,1.56,.64,1)';
-
-  // En admin: badge con nombre del usuario encima del mensaje
-  if(isAdmin && role === 'user'){
-    const badge = document.createElement('div');
-    badge.style.cssText = 'font-size:.7rem;font-weight:700;color:var(--c1);margin-bottom:.3rem;display:flex;align-items:center;gap:5px;text-transform:uppercase;letter-spacing:.5px';
-    badge.innerHTML = `<span style="width:7px;height:7px;border-radius:50%;background:var(--c1);display:inline-block;flex-shrink:0"></span>${m.name||'Visitante'}`;
-    wrap.appendChild(badge);
-  }
-
-  const txt = document.createElement('div');
-  txt.textContent = m.text;
-  wrap.appendChild(txt);
-
+  wrap.textContent = m.text;
   if(role !== 'system'){
-    const t = document.createElement('div');
-    t.className = 'msg-time';
-    t.textContent = isAdmin
-      ? fmtTime() + (role==='user' ? ' · '+(m.name||'Visitante') : ' · SERENA')
-      : (role==='admin' ? 'SERENA · ' : '') + fmtTime();
+    const t = document.createElement('div'); t.className='msg-time';
+    t.textContent = (role==='admin'?'SERENA · ':'')+fmtTime();
     wrap.appendChild(t);
   }
-
-  container.appendChild(wrap);
-  container.scrollTop = container.scrollHeight;
+  c.appendChild(wrap); c.scrollTop = c.scrollHeight;
 }
 
-/* Llega un mensaje nuevo desde Firebase */
-function onNewMsg(m){
-  // Admin siempre ve todo
-  appendToAdmin(m);
+/* ── ADMIN SIDE — per session ── */
+// conversations[sessionId] = { info, msgs[], el, unread }
+const conversations = {};
+let activeSession = null;
 
-  // Usuario: solo ve sus propios mensajes Y respuestas del admin
-  if(m.role === 'admin'){
-    // Respuesta de admin: mostrar solo al usuario al que va dirigida
-    if(!m.toSession || m.toSession === SESSION_ID){
-      appendToUser(m);
-      document.getElementById('chatTyping').textContent = '';
+function getOrCreateConv(sid, info={}){
+  if(conversations[sid]) return conversations[sid];
+  const conv = { sid, info, msgs:[], unread:0 };
+  conversations[sid] = conv;
+  renderConvItem(conv);
+  return conv;
+}
+
+function renderConvItem(conv){
+  const list = document.getElementById('adminConvs');
+  // Remove placeholder
+  const ph = list.querySelector('div[style*="italic"]');
+  if(ph) ph.remove();
+
+  const el = document.createElement('div');
+  el.className = 'conv-item';
+  el.id = 'conv-'+conv.sid;
+  el.onclick = () => selectSession(conv.sid);
+  el.innerHTML = `<div class="conv-name">${conv.info.name||'Visitante'}</div><div class="conv-preview conv-prev-${conv.sid}">Sin mensajes aún</div>`;
+  list.appendChild(el);
+  conv.el = el;
+}
+
+function selectSession(sid){
+  activeSession = sid;
+  // Mark all as read
+  if(conversations[sid]) conversations[sid].unread = 0;
+  // Update sidebar
+  document.querySelectorAll('.conv-item').forEach(e=>e.classList.remove('active','unread'));
+  const convEl = document.getElementById('conv-'+sid);
+  if(convEl){ convEl.classList.add('active'); convEl.classList.remove('unread'); const b=convEl.querySelector('.conv-badge'); if(b)b.remove(); }
+  // Update topbar
+  const name = conversations[sid]?.info?.name || 'Visitante';
+  document.getElementById('adminChatTitle').textContent = '💬 '+name;
+  document.getElementById('adminChatSub').textContent = 'Sesión: '+sid.slice(0,12)+'…';
+  document.getElementById('adminDeleteBtn').style.display='inline-flex';
+  document.getElementById('adminChat').style.display='flex';
+  document.getElementById('adminStats').style.display='none';
+  // Render messages for this session
+  const msgs = document.getElementById('adminMsgs');
+  msgs.innerHTML = '';
+  (conversations[sid]?.msgs || []).forEach(m => renderAdminMsg(m, false));
+  msgs.scrollTop = msgs.scrollHeight;
+  document.getElementById('adminInp').focus();
+}
+
+function renderAdminMsg(m, animate=true){
+  const msgs = document.getElementById('adminMsgs');
+  const role = m.role==='admin'?'admin':m.role==='system'?'system':'user';
+  const wrap = document.createElement('div');
+  wrap.className = 'msg '+role;
+  if(animate) wrap.style.animation='msgPop .35s cubic-bezier(.34,1.56,.64,1)';
+
+  if(role==='user'){
+    const badge = document.createElement('div');
+    badge.style.cssText='font-size:.68rem;font-weight:700;color:var(--c1);margin-bottom:.28rem;display:flex;align-items:center;gap:4px;text-transform:uppercase;letter-spacing:.5px';
+    badge.innerHTML=`<span style="width:6px;height:6px;border-radius:50%;background:var(--c1);display:inline-block"></span>${m.name||'Visitante'}`;
+    wrap.appendChild(badge);
+  }
+  const txt = document.createElement('div'); txt.textContent=m.text; wrap.appendChild(txt);
+  if(role!=='system'){
+    const t=document.createElement('div'); t.className='msg-time';
+    t.textContent=fmtTime()+(role==='user'?' · '+(m.name||'Visitante'):'  · SERENA');
+    wrap.appendChild(t);
+  }
+  msgs.appendChild(wrap); msgs.scrollTop=msgs.scrollHeight;
+}
+
+// Called when Firebase delivers a new message for a session
+function onAdminMsg(sid, m){
+  const conv = getOrCreateConv(sid);
+  conv.msgs.push(m);
+
+  // Update preview in sidebar
+  const prev = document.querySelector('.conv-prev-'+sid);
+  if(prev) prev.textContent = (m.role==='admin'?'Tú: ':'')+m.text.slice(0,40)+(m.text.length>40?'…':'');
+
+  // If this session is currently open → render message
+  if(activeSession === sid){
+    renderAdminMsg(m, true);
+  } else if(m.role==='user'){
+    // Unread badge
+    conv.unread++;
+    const convEl = document.getElementById('conv-'+sid);
+    if(convEl){
+      convEl.classList.add('unread');
+      let badge = convEl.querySelector('.conv-badge');
+      if(!badge){ badge=document.createElement('div'); badge.className='conv-badge'; convEl.appendChild(badge); }
+      badge.textContent=conv.unread>9?'9+':conv.unread;
     }
-  }
-  // Los mensajes de usuario solo los ve quien los envió (ya se agregan en sendChat)
-
-  // Notificación flotante al admin si el panel está cerrado
-  if(m.role === 'user' && !document.getElementById('adminOv').classList.contains('show')){
-    showAdminNotif(m.name||'Visitante', m.text);
+    showAdminNotif(conv.info.name||'Visitante', m.text, sid);
   }
 
-  // Estadísticas
-  if(m.role !== 'system'){
-    totalMsgs++;
-    if(m.role === 'admin') adminReplies++;
-    if(m.role === 'user' && m.name) uniqueUsers.add(m.name);
-    document.getElementById('statMsgs').textContent = totalMsgs;
-    document.getElementById('statAdmin').textContent = adminReplies;
-    document.getElementById('statUsers').textContent = uniqueUsers.size || 1;
-  }
+  // Stats
+  totalMsgs++;
+  if(m.role==='admin') adminReplies++;
+  if(m.role==='user'&&m.name) uniqueUsers.add(m.name);
+  document.getElementById('statMsgs').textContent=totalMsgs;
+  document.getElementById('statAdmin').textContent=adminReplies;
+  document.getElementById('statUsers').textContent=uniqueUsers.size||1;
 }
 
-/* Notificación flotante cuando llega mensaje y admin no está en el panel */
-function showAdminNotif(name, text){
-  const old = document.getElementById('adminNotif');
-  if(old) old.remove();
-  const n = document.createElement('div');
-  n.id = 'adminNotif';
-  n.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;z-index:9700;background:rgba(var(--rgb-dark),.97);border:1px solid rgba(var(--rgb1),.4);border-radius:var(--rmd);padding:1rem 1.2rem;max-width:280px;box-shadow:0 8px 32px rgba(0,0,0,.5);animation:msgPop .4s cubic-bezier(.34,1.56,.64,1);cursor:pointer';
-  n.innerHTML = `
-    <div style="font-size:.7rem;color:var(--c1);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.3rem">💬 Nuevo mensaje de ${name}</div>
-    <div style="font-size:.85rem;color:var(--text-bright);line-height:1.5;margin-bottom:.3rem">${text.length>60?text.slice(0,60)+'…':text}</div>
-    <div style="font-size:.72rem;color:var(--text-dim)">Te responderemos en breve 🌿</div>`;
-  n.onclick = () => { n.remove(); openAdmin(); };
-  document.body.appendChild(n);
-  setTimeout(()=>{ if(n.parentNode){ n.style.animation='motiRemove .4s ease forwards'; setTimeout(()=>n.remove(),400); }}, 8000);
-}
+window._fbSessionInfoUpdated = (sid, info) => {
+  if(!conversations[sid]) return;
+  conversations[sid].info = info;
+  const nameEl = document.querySelector('#conv-'+sid+' .conv-name');
+  if(nameEl) nameEl.textContent = info.name||'Visitante';
+  if(activeSession===sid) document.getElementById('adminChatTitle').textContent='💬 '+(info.name||'Visitante');
+};
 
-/* Iniciar escucha Firebase — solo una vez */
-function startListening(){
-  if(fbListening) return;
-  fbListening = true;
-  if(window._fbReady && window._fbListen){
-    window._fbListen(msg => onNewMsg(msg));
-  }
-}
-
-/* El usuario envía un mensaje */
-function sendChat(){
-  const inp = document.getElementById('chatInp');
-  const text = inp.value.trim();
-  if(!text) return;
-  inp.value = '';
-  const m = { role:'user', text, name: nickname, sessionId: SESSION_ID, client: Date.now() };
-
-  // Mostrar inmediatamente en el chat de este usuario (optimista)
-  appendToUser(m);
-
-  if(window._fbReady && window._fbSend){
-    window._fbSend(m).catch(()=>{});
-  } else {
-    // Modo demo: respuesta automática solo visible para este usuario
-    setTimeout(()=>{
-      const reply = {role:'admin', text:'¡Hola '+nickname+'! 🌿 Gracias por escribirnos. Estamos aquí para acompañarte.', name:'SERENA', toSession: SESSION_ID};
-      appendToUser(reply);
-      appendToAdmin(reply);
-    }, 1800);
-  }
-
-  // Indicador "escribiendo..." solo para este usuario
-  const typing = document.getElementById('chatTyping');
-  typing.textContent = 'SERENA está escribiendo…';
-  setTimeout(()=>{ if(typing.textContent.includes('escribiendo')) typing.textContent=''; }, 3500);
-}
-
-/* Admin responde — se guarda en Firebase y llega a todos (onNewMsg filtra por toSession) */
+/* Admin responde a la sesión activa */
 function adminSend(){
   const inp = document.getElementById('adminInp');
   const text = inp.value.trim();
-  if(!text) return;
+  if(!text || !activeSession) return;
   inp.value = '';
-  // Sin toSession = respuesta global (todos los usuarios la ven)
-  const m = { role:'admin', text, name:'SERENA', client: Date.now() };
-  if(window._fbReady && window._fbSend){
-    window._fbSend(m).catch(()=>{ appendToAdmin(m); appendToUser(m); });
+  playChatSendSound();
+  const m = { role:'admin', text, name:'SERENA', toSession: activeSession, client: Date.now() };
+  if(window._fbSendMsg){
+    window._fbSendMsg(activeSession, m).catch(()=>{ renderAdminMsg(m); appendToUser(m); });
   } else {
-    appendToAdmin(m);
-    appendToUser(m);
+    renderAdminMsg(m); appendToUser(m);
   }
 }
 
-window.addEventListener('fbReady', ()=>{ startListening(); });
+/* Eliminar conversación activa */
+function adminDeleteCurrent(){
+  if(!activeSession) return;
+  if(!confirm('¿Finalizar y borrar esta conversación?')) return;
+  if(window._fbDeleteSession) window._fbDeleteSession(activeSession);
+  // Remove from UI
+  const el = document.getElementById('conv-'+activeSession);
+  if(el) el.remove();
+  delete conversations[activeSession];
+  activeSession = null;
+  document.getElementById('adminMsgs').innerHTML='<div style="text-align:center;padding:3rem;color:var(--text-dim);font-size:.9rem">Conversación eliminada 🌿</div>';
+  document.getElementById('adminChatTitle').textContent='Selecciona una conversación';
+  document.getElementById('adminChatSub').textContent='Elige un usuario del panel izquierdo';
+  document.getElementById('adminDeleteBtn').style.display='none';
+  if(!document.querySelector('.conv-item')){
+    document.getElementById('adminConvs').innerHTML='<div style="font-size:.8rem;color:var(--text-dim);font-style:italic;padding:.5rem">Esperando usuarios…</div>';
+  }
+}
+
+/* Notificación flotante */
+function showAdminNotif(name, text, sid){
+  const old = document.getElementById('adminNotif'); if(old) old.remove();
+  const n = document.createElement('div'); n.id='adminNotif';
+  n.style.cssText='position:fixed;bottom:1.5rem;right:1.5rem;z-index:9700;background:rgba(var(--rgb-dark),.97);border:1px solid rgba(var(--rgb1),.4);border-radius:var(--rmd);padding:1rem 1.2rem;max-width:280px;box-shadow:0 8px 32px rgba(0,0,0,.5);animation:msgPop .4s cubic-bezier(.34,1.56,.64,1);cursor:pointer';
+  n.innerHTML=`<div style="font-size:.7rem;color:var(--c1);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.3rem">💬 ${name}</div><div style="font-size:.85rem;color:var(--text-bright);line-height:1.5;margin-bottom:.3rem">${text.length>60?text.slice(0,60)+'…':text}</div><div style="font-size:.72rem;color:var(--text-dim)">Te responderemos en breve 🌿</div>`;
+  n.onclick=()=>{ n.remove(); openAdmin(); if(sid) setTimeout(()=>selectSession(sid),200); };
+  document.body.appendChild(n);
+  setTimeout(()=>{ if(n.parentNode){ n.style.animation='motiRemove .4s ease forwards'; setTimeout(()=>n.remove(),400); }},8000);
+}
+
+function adminTab(t){
+  document.querySelectorAll('.admin-nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('btnStats').classList.toggle('active', t==='stats');
+  document.getElementById('adminChat').style.display=t==='stats'?'none':'flex';
+  document.getElementById('adminStats').style.display=t==='stats'?'block':'none';
+}
+
+/* ── START LISTENING ── */
+function startListening(){
+  if(fbListening) return; fbListening=true;
+  if(window._fbReady && window._fbListenSession){
+    // User side: listen to own session
+    window._fbListenSession(SESSION_ID, m => {
+      if(m.role==='admin' && (!m.toSession || m.toSession===SESSION_ID)){
+        appendToUser(m);
+        document.getElementById('chatTyping').textContent='';
+      }
+    });
+    // Admin side: listen all sessions
+    window._fbListenAllSessions(
+      (sid, info) => { getOrCreateConv(sid, info); },
+      (sid, m)    => { onAdminMsg(sid, m); }
+    );
+  }
+}
+
+/* User send */
+function sendChat(){
+  const inp=document.getElementById('chatInp');
+  const text=inp.value.trim(); if(!text) return;
+  inp.value='';
+  playChatSendSound();
+  const m={role:'user',text,name:nickname,sessionId:SESSION_ID,client:Date.now()};
+  appendToUser(m);
+  if(window._fbSendMsg){
+    // Register session info too (so admin sees the name)
+    window._fbSetSession&&window._fbSetSession(SESSION_ID,{name:nickname,startedAt:Date.now()});
+    window._fbSendMsg(SESSION_ID,m).catch(()=>{});
+  } else {
+    // Demo
+    setTimeout(()=>{
+      const r={role:'admin',text:'¡Hola '+nickname+'! 🌿 Estamos aquí para acompañarte.',name:'SERENA',toSession:SESSION_ID};
+      appendToUser(r);
+    },1800);
+  }
+  const typing=document.getElementById('chatTyping');
+  typing.textContent='SERENA está escribiendo…';
+  setTimeout(()=>{if(typing.textContent.includes('escribiendo'))typing.textContent='';},3500);
+}
+
+window.addEventListener('fbReady',()=>startListening());
 setTimeout(()=>{
   if(window._fbReady) startListening();
-  // Mensaje de bienvenida local — solo lo ve este usuario, no va a Firebase
-  appendToUser({role:'system', text:'¡Bienvenido/a a SERENA! 🌿 Escríbenos con confianza, estamos aquí para ti.'});
-}, 1500);
+  appendToUser({role:'system',text:'¡Bienvenido/a a SERENA! 🌿 Escríbenos con confianza, estamos aquí para ti.'});
+},1500);
 
 /* INIT GAMES */
 initClick();initFind();initColorGame();
